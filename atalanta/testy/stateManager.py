@@ -3,8 +3,6 @@ import sys
 
 from runtimeUtil import *
 
-# TODO:
-# 0. modify self.state to acually store (name, value) pairs
 class StateManager(object):
 
   """input is a multiprocessing.Queue object to support multiple
@@ -25,8 +23,6 @@ class StateManager(object):
     pipe.send(SM_COMMANDS.READY)
 
   def start(self):
-    # TODO: Make sure request is a list/tuple before attempting to access
-    # And that there are the correct number of elements
     while True:
       request = self.input.get(block=True)
 
@@ -39,6 +35,6 @@ class StateManager(object):
       elif request[0] == SM_COMMANDS.HELLO:
         self.state[0] -= 1
         self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(self.state[0])
-      # TODO: Add better error description
+
       else:
         self.badThingsQueue.put(BadThing(sys.exc_info(), "Unknown process name: %s" % (request,), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))

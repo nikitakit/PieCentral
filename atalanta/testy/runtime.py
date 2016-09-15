@@ -2,31 +2,27 @@ import multiprocessing
 import time
 import sys
 import traceback
-
+from Ansible import *
+import studentCode
 import stateManager
-import studentAPI
-
+STUDENT_THREAD_NAME = "student_thread"
 from runtimeUtil import *
 
 
 # TODO:
 # 0. Set up testing code for the following features.
-# DONE 1. Have student code go through api to modify state.
-# DONE 2. Imposing timeouts on student code (infinite loop, try-catch)
+# 1. Have student code go through api to modify state.
+# 2. Imposing timeouts on student code (infinite loop, try-catch)
 # 3. Figure out how to kill student thread.
 # 4. Integrate with Bob's socket code: spin up a communication process
 # 5. stateManager throw badThing on processNameNotFound
 # 6. refactor process startup code: higher order function
-# 7. Writeup how all this works
-# 8. Investigate making BadThing extend exception
 
 allProcesses = {}
-
-# TODO:
-# 0. Set up testing code for the following features. 
-# 1. Have student code throw an exception. Make sure runtime catches gracefully.
-# 2. Have student code go through api to modify state. 
-
+badThings = multiprocessing.Condition()
+globalBadThing = "unititialized globalBadThing"
+officialState = {'deviceId':['deviceType', 'value']}
+officialState['studentCodeState'] = 2 
 
 def runtime():
   badThingsQueue = multiprocessing.Queue()
@@ -35,6 +31,10 @@ def runtime():
   restartCount = 0
   try:
     spawnProcess(PROCESS_NAMES.STATE_MANAGER, startStateManager)
+    spawnProcess(PROCESS_NAMES.ANSIBLE_PACKAGER, packageData)
+    spawnProcess(PROCESS_NAMES.ANSIBLE_SENDER, udpSender)
+    spawnProcess(PROCESS_NAMES.ANSIBLE_RECEIVER, udpReceiver)
+    spawnProcess(PROCESS_NAMES.ANSIBLE_UNPACKAGER, unpackageData)
     while True:
       if restartCount >= 5:
         print(RUNTIME_INFO.DEBUG_DELIMITER_STRING.value)
@@ -44,17 +44,13 @@ def runtime():
       print("Starting studentCode attempt: %s" % (restartCount,))
       spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode)
       while True:
-        newBadThing = badThingsQueue.get(block=True)
+        globalBadThing = badThingsQueue.get(block=True)
         print(RUNTIME_INFO.DEBUG_DELIMITER_STRING.value)
-        print(newBadThing)
-        if (newBadThing.event == BAD_EVENTS.STUDENT_CODE_ERROR) or \
-            (newBadThing.event == BAD_EVENTS.STUDENT_CODE_TIMEOUT):
+        print(globalBadThing)
+        if globalBadThing.event == BAD_EVENTS.STUDENT_CODE_ERROR:
           break
       stateQueue.put([SM_COMMANDS.RESET])
       restartCount += 1
-      print(RUNTIME_INFO.DEBUG_DELIMITER_STRING.value)
-      print("Funtime Runtime is done having fun.")
-      print("TERMINATING")
   except:
     print(RUNTIME_INFO.DEBUG_DELIMITER_STRING.value)
     print("Funtime Runtime Had Too Much Fun")
@@ -62,34 +58,14 @@ def runtime():
 
 def runStudentCode(badThingsQueue, stateQueue, pipe):
   try:
-    import signal
-    def timed_out_handler(signum, frame):
-      raise TimeoutError("studentCode timed out")
-    signal.signal(signal.SIGALRM, timed_out_handler)
-
-    signal.alarm(RUNTIME_INFO.STUDENT_CODE_TIMEOUT.value)
-    import studentCode
-    signal.alarm(0)
-
-    r = studentAPI.Robot(stateQueue, pipe)
-    studentCode.Robot = r
-
-    signal.alarm(RUNTIME_INFO.STUDENT_CODE_TIMEOUT.value)
     studentCode.setup(pipe)
-    signal.alarm(0)
-
     nextCall = time.time()
     while True:
-      signal.alarm(RUNTIME_INFO.STUDENT_CODE_TIMEOUT.value)
       studentCode.main(stateQueue, pipe)
-      signal.alarm(0)
       nextCall += 1.0/RUNTIME_INFO.STUDENT_CODE_HZ.value
       time.sleep(nextCall - time.time())
-  except TimeoutError:
-    badThingsQueue.put(BadThing(sys.exc_info(), None, event=BAD_EVENTS.STUDENT_CODE_TIMEOUT))
   except Exception:
-    badThingsQueue.put(BadThing(sys.exc_info(), None, event=BAD_EVENTS.STUDENT_CODE_ERROR))
-
+    badThingsQueue.put(BadThing(sys.exc_info(), None))
 def startStateManager(badThingsQueue, stateQueue, runtimePipe):
   try:
     SM = stateManager.StateManager(badThingsQueue, stateQueue, runtimePipe)
@@ -108,5 +84,5 @@ def processFactory(badThingsQueue, stateQueue):
     newProcess.start()
   return spawnProcessHelper
 
-if __name__ == "__main__":
-  runtime()
+
+runtime()

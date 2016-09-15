@@ -4,16 +4,19 @@ from enum import Enum, unique
 
 @unique
 class BAD_EVENTS(Enum):
-  BAD_EVENT             = "BAD THINGS HAPPENED"
-  STUDENT_CODE_ERROR    = "Student Code Crashed"
-  STUDENT_CODE_TIMEOUT  = "Student Code Timed Out"
-  UNKNOWN_PROCESS       = "Unknown State Manager process name"
+  BAD_EVENT           = "BAD THINGS HAPPENED"
+  STUDENT_CODE_ERROR  = "Student Code Crashed"
+  UNKNOWN_PROCESS     = "Unknown State Manager process name"
 
 @unique
 class PROCESS_NAMES(Enum):
   STUDENT_CODE        = "studentProcess"
   STATE_MANAGER       = "stateProcess"
   RUNTIME             = "runtime"
+  ANSIBLE_PACKAGER    = "packageProcess"
+  ANSIBLE_SENDER      = "senderProcess"
+  ANSIBLE_RECEIVER    = "receiveProcess"
+  ANSIBKE_UNPACKAGER  = "unpackageProcess"
 
 @unique
 class SM_COMMANDS(Enum):
@@ -32,7 +35,6 @@ class SM_COMMANDS(Enum):
   READY               = ()
 
 class RUNTIME_INFO(Enum):
-  STUDENT_CODE_TIMEOUT = 3
   STUDENT_CODE_HZ    = 5 # Number of times to execute studentCode.main per second
   DEBUG_DELIMITER_STRING  = "****************** RUNTIME DEBUG ******************"
 
@@ -52,14 +54,10 @@ class BadThing:
       "Error Type: %s\n"
       "Error Value: %s\n"
       "Traceback: \n%s") % \
-      (self.name, self.event, self.errorType, self.errorValue, "".join(traceback.format_tb(tb)))
+      (self.name, self.event, self.errorType, self.errorValue, "".join(traceback.format_tb(self.traceback)))
     return badThingDump
-
   def __str__(self):
     if self.printStackTrace:
       return self.stackTrace
     else:
       return str(self.data)
-
-class TimeoutError(Exception):
-  pass
