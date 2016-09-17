@@ -106,6 +106,34 @@ def checksum(data):
     chk ^= data[i]
   return chk
 
+
+  assert type(data) == bytearray, "data must be a bytearray"
+
+  if len(data) % 2 != 0:
+    data = data + bytearray([0])
+  pairs = []
+
+  for i in range(0, len(data), 2):
+    first = data[i]
+    first = first << 8
+    first |= data[i+1]
+    pairs.append(first)
+
+  chk = pairs[0]
+  for j in range(1, len(pairs)):
+    chk += pairs[j]
+    if chk >> 16 == 1:
+      chk += 1
+      chk &= 0xffff
+
+  chk = ~chk
+  chk &= 0xffff 
+  if chk == 0:
+    return 0xffff
+  return chk
+
+
+
 # Sends this message
 # Computes the checksum
 # Then sends each byte of the message, and finally sends the checksum byte
