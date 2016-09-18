@@ -10,7 +10,7 @@ class RuntimeReadThread(threading.Thread):
 	def run(self):
 		while True:
 			instruction = self.runtime_pipe.recv()
-			print instruction
+			print(instruction)
 
 class DeviceWriteThread(threading.Thread):
 
@@ -20,7 +20,7 @@ class DeviceWriteThread(threading.Thread):
 	def run(self):
 		while True:
 			instruction = self.queue.get()
-			print instruction
+			print(instruction)
 
 class DeviceReadThread(threading.Thread):
 
@@ -28,6 +28,8 @@ class DeviceReadThread(threading.Thread):
 		self.serialPort = serialPort
 		self.errorQueue = errorQueue
 		self.stateQueue = stateQueue
+
+	def run(self):
 		while True:
 			# try to read a packet from serial port
 			# if an exception is caught (device disconnect) send it to errorQueue
@@ -35,6 +37,11 @@ class DeviceReadThread(threading.Thread):
 			pass
 																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																											
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
+
+	while True:
+		instruction = pipeFromChild.recv()
+		if instruction[0] == "enumerate_all":
+			stateQueue.put(["device_subscribed", 0, 0, []])
 
 	# spawn a read thread for each serial port
 	# span a write thread
