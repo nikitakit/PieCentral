@@ -16,7 +16,7 @@ class PROCESS_NAMES(Enum):
   ANSIBLE_PACKAGER    = "packageProcess"
   ANSIBLE_SENDER      = "senderProcess"
   ANSIBLE_RECEIVER    = "receiveProcess"
-  ANSIBKE_UNPACKAGER  = "unpackageProcess"
+  ANSIBLE_UNPACKAGER  = "unpackageProcess"
 
 @unique
 class SM_COMMANDS(Enum):
@@ -33,6 +33,9 @@ class SM_COMMANDS(Enum):
   ADD                 = ()
   HELLO               = ()
   READY               = ()
+  STORE               = ()
+  SEND                = ()#May just make this separate thing since we would have to constantly send messages then
+  
 
 class RUNTIME_INFO(Enum):
   STUDENT_CODE_HZ    = 5 # Number of times to execute studentCode.main per second

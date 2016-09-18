@@ -16,7 +16,9 @@ class StateManager(object):
     self.processMapping = {PROCESS_NAMES.RUNTIME: runtimePipe}
 
   def initRobotState(self):
-    self.state = [5]
+    self.state = {} #{1L: ['val', 'type']} actual mapping
+    self.nameMap = {'name':'UID'}
+    self.gamepadData = []
 
   def addPipe(self, processName, pipe):
     self.processMapping[processName] = pipe
@@ -35,6 +37,10 @@ class StateManager(object):
       elif request[0] == SM_COMMANDS.HELLO:
         self.state[0] -= 1
         self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(self.state[0])
-
+      elif (request[0] == SM_COMMANDS.SEND):
+        sendPipe = self.processMapping[PROCESS_NAMES.ANSIBLE_PACKAGER]
+        sendPipe.send(self.state)
+      elif (request[0] == SM_COMMANDS.STORE):
+        self.gamepadData = request[1]
       else:
         self.badThingsQueue.put(BadThing(sys.exc_info(), "Unknown process name: %s" % (request,), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))

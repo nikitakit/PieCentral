@@ -1,1 +1,4 @@
 *.log
+*_pb2.py
+atalanta/testy/runtime_proto_pb2.py
+
