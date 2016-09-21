@@ -1,6 +1,7 @@
 import hibike
 import time
 h = hibike.Hibike(timeout=1)
+h.addVirtualPort('/dev/pts/26')
 time.sleep(2)
 x = [(uid, 100) for uid in h.getUIDs()]
 uid_params = {uid: h.getParams(uid)[1:] for uid in h.getUIDs()}
