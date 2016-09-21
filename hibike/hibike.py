@@ -389,7 +389,7 @@ class HibikeThread(threading.Thread):
         counter = 0
         if not self.hibike.serialToUID:
             return
-        randIter = self.hibike.serialToUID.keys()
+        randIter = list(self.hibike.serialToUID.keys())
         random.shuffle(randIter)
         for serialPort in randIter:
             packet = self.processPacket(serialPort)
@@ -519,7 +519,7 @@ class DeviceType():
             self.machineNames   = [str(param['machineName']) for param in parameters]
             self.humanNames     = [str(param['humanName']) for param in parameters]
             self.dataTuple      = namedtuple(self.deviceName, self.machineNames)
-            self.params         = map(str, json_dict["params"])
+            self.params         = list(map(str, json_dict["params"]))
             self.paramIDs       = {self.params[index]: index for index in range(len(self.params))}
         else:
             csv_row             = csv.reader(
