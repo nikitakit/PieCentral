@@ -31,3 +31,16 @@ Implement a runtime simulator that uses this protocol for testing.
 
 - Design and Document a provisional protocol; talk to runtime team
 - Write a simulator for this protocol
+	- Should expose a testing api similar to last year's hibike.py
+
+
+## Virtual Smart Sensors (hibike/virtual)
+
+Implement smart device simulators for testing hibike/runtime without physical sensors.
+
+### Tasks:
+
+- Write python clients that simulates the behavior of real smart devices
+- Write scripts to spawn/despawn these virtual devices and allow hibike to find them
+    - Probably need some config file
+- Make the virtual smart sensors to fail/behave erratically in different ways to test hibike
