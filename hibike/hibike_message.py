@@ -112,10 +112,11 @@ def checksum(data):
 def send(serial_conn, message):
   m_buff = message.toByte()
   chk = checksum(m_buff)
-  m_buff.append(chr(chk))
+  m_buff.append(chk)
   encoded = cobs_encode(m_buff)
   out_buf = bytearray([0x00, len(encoded)]) + encoded
   serial_conn.write(out_buf)
+
 
 
 def make_sub_request(delay):
@@ -215,7 +216,7 @@ def cobs_decode(data):
   output = bytearray()
   index = 0
   while (index < len(data)):
-    block_size = ord(data[index]) - 1
+    block_size = data[index] - 1
     index += 1
     if index + block_size > len(data):
       return bytearray()
