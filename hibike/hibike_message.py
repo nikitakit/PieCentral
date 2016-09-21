@@ -19,15 +19,15 @@ messageTypes = {
 
 # Dictionary of device types: enumeration
 deviceTypes = {
-  "Limit Switch" :         0x00,
-  "Line Follower" :        0x01,
+  "LimitSwitch" :         0x00,
+  "LineFollower" :        0x01,
   "Potentiometer" :        0x02,
   "Encoder" :              0x03,
-  "Battery Buzzer" :       0x04,
-  "Team Flag" :            0x05,
+  "BatteryBuzzer" :       0x04,
+  "TeamFlag" :            0x05,
   "Grizzly" :              0x06,
-  "Servo Control" :        0x07,
-  "Linear Actuator" :      0x08
+  "ServoControl" :        0x07,
+  "LinearActuator" :      0x08
 }
 
 
@@ -124,6 +124,13 @@ def make_sub_request(delay):
   temp_payload = struct.pack('<H', delay)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionRequest"], payload)
+  return message
+
+def make_sub_response(device_type, year, id, delay):
+  """ Makes and returns SubscriptionResponse message."""
+  temp_payload = struct.pack('<HBQH', device_type, year, id, delay)
+  payload = bytearray(temp_payload)
+  message = HibikeMessage(messageTypes["SubscriptionResponse"], payload)
   return message
 
 def make_device_update(param, value):
