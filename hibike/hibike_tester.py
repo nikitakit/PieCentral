@@ -1,6 +1,5 @@
 import hibike_process
 from multiprocessing import Process, Pipe, Queue
-from enum import Enum, unique
 
 class Hibike:
 
@@ -9,7 +8,7 @@ class Hibike:
         self.badThingsQueue = Queue()
         self.stateQueue     = Queue()
         self.pipeTochild, self.pipeFromChild = Pipe()
-        self.hibike_process = Process(target=hibike_process.hibike_process, args=(badThingsQueue, stateQueue, pipeFromChild))
+        self.hibike_process = Process(target=hibike_process.hibike_process, args=(self.badThingsQueue, self.stateQueue, self.pipeFromChild))
         self.hibike_process.daemon = True
         self.hibike_process.start()
 
@@ -28,7 +27,7 @@ class Hibike:
     def read(self, uid, params):
         self.pipeTochild.send(["read", uid, params])
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     h = Hibike()
     h.ready()
     h.enumerate()
