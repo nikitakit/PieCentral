@@ -1,7 +1,18 @@
 import threading
 import multiprocessing
+import hibike_message
 
-class WriteThread(threading.Thread):
+class RuntimeReadThread(threading.Thread):
+
+	def __init__(self, pipeFromChild):
+		self.runtime_pipe = pipeFromChild
+
+	def run(self):
+		while True:
+			instruction = self.runtime_pipe.recv()
+			print instruction
+
+class DeviceWriteThread(threading.Thread):
 
 	def __init__(self, instructionQueue):
 		self.queue = instructionQueue
@@ -11,7 +22,7 @@ class WriteThread(threading.Thread):
 			instruction = self.queue.get()
 			print instruction
 
-class ReadThread(threading.Thread):
+class DeviceReadThread(threading.Thread):
 
 	def __init__(self, serialPort, errorQueue, stateQueue):
 		self.serialPort = serialPort
