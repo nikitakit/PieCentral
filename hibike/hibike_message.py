@@ -5,15 +5,12 @@ import struct
 import pdb
 # Dictionary of message types: message id
 messageTypes = {
-  "SubscriptionRequest" :  0x00,
-  "SubscriptionResponse" : 0x01,
-  "DataUpdate" :           0x02,
-  "DeviceUpdate" :         0x03,
-  "DeviceStatus" :         0x04,
-  "DeviceResponse" :       0x05,
-  "Ping" :                 0x06,
-  "DescriptionRequest" :   0x08,
-  "DescriptionResponse" :  0x09,
+  "Ping" :                 0x10
+  "SubscriptionRequest" :  0x11,
+  "SubscriptionResponse" : 0x12,
+  "DeviceRead" :           0x13,
+  "DeviceWrite" :          0x14,
+  "DeviceData" :           0x15,
   "Error" :                0xff
 }
 
@@ -27,7 +24,11 @@ deviceTypes = {
   "Team Flag" :            0x05,
   "Grizzly" :              0x06,
   "Servo Control" :        0x07,
-  "Linear Actuator" :      0x08
+  "Linear Actuator" :      0x08,
+  "Color Sensor" :         0x09,
+  "Distance Sensor" :      0x10,
+  "Metal Detector" :       0x11,
+  "Example Device" :       0xffff
 }
 
 
@@ -147,9 +148,9 @@ def send(serial_conn, message):
 
 
 
-def make_sub_request(delay):
+def make_sub_request(params, delay):
   """ Makes and returns SubscriptionRequest message."""
-  temp_payload = struct.pack('<H', delay)
+  temp_payload = struct.pack('<HH', params, delay)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionRequest"], payload)
   return message
@@ -160,6 +161,12 @@ def make_device_update(param, value):
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["DeviceUpdate"], payload)
   return message
+
+def make_device_read(params):
+  """ Makes and returns DeviceRead message."""
+  temp_payload = struct.pack('<H', params)
+  pyaload = bytearray(temp_payload)
+  message = HibikeMessage(messageTypes["DeviceRead"], payload)
 
 def make_device_status(param):
   """ Makes and returns DeviceStatus message."""
