@@ -157,21 +157,65 @@ Message ID Enumeration:
 
 Device Type Enumeration:
 
-|   ID    |    Sensor      |
-|---------|----------------|
-|  0x00   | LimitSwitch    |
-|  0x01   | LineFollower   |
-|  0x02   | Potentiometer  |
-|  0x03   | Encoder        |
-|  0x04   | BatteryBuzzer  |
-|  0x05   | TeamFlag       |
-|  0x06   | Grizzly        |
-|  0x07   | ServoControl   |
-|  0x08   | LinearActuator |
-|  0x09   | ColorSensor    |
-|  0x10   | DistanceSensor |
-|  0x11   | MetalDetector  |
-|  0xFFFF | ExampleDevice  |
+|   ID    |    Sensor      | Param Number | Param Name | Param Type | Read? | Write? |
+|---------|----------------|--------------|------------|------------|-------|--------|
+|  0x00   | LimitSwitch    | 0            | switch0    | bool       | yes   | no     |
+|         |                | 1            | switch1    | bool       | yes   | no     |
+|         |                | 2            | switch2    | bool       | yes   | no     |
+|         |                | 3            | switch3    | bool       | yes   | no     |
+|  0x01   | LineFollower   | 0            | left       | float      | yes   | no     |
+|         |                | 1            | center     | float      | yes   | no     |
+|         |                | 2            | right      | float      | yes   | no     |
+|  0x02   | Potentiometer  | 0            | pot0       | float      | yes   | no     |
+|         |                | 1            | pot1       | float      | yes   | no     |
+|         |                | 2            | pot2       | float      | yes   | no     |
+|         |                | 3            | pot3       | float      | yes   | no     |
+|  0x03   | Encoder        | 0            | rotation   | int16_t    | yes   | no     |
+|  0x04   | BatteryBuzzer  | 0            | connected  | bool       | yes   | no     |
+|         |                | 1            | safe       | bool       | yes   | no     |
+|         |                | 2            | cell1      | float      | yes   | no     |
+|         |                | 3            | cell2      | float      | yes   | no     |
+|         |                | 4            | cell3      | float      | yes   | no     |
+|         |                | 5            | total      | float      | yes   | no     |
+|         |                | 6            | callibrate | bool       | no    | yes    |
+|  0x05   | TeamFlag       | 0            | mode       | bool       | yes   | yes    |
+|         |                | 1            | blue       | bool       | yes   | yes    |
+|         |                | 2            | yellow     | bool       | yes   | yes    |
+|         |                | 3            | s1         | bool       | yes   | yes    |
+|         |                | 4            | s2         | bool       | yes   | yes    |
+|         |                | 5            | s3         | bool       | yes   | yes    |
+|         |                | 6            | s3         | bool       | yes   | yes    |
+|  0x06   | Grizzly        |              |            |            |       |        |
+|  0x07   | ServoControl   | 0            | servo0     | uint8_t    | yes   | yes    |
+|         |                | 1            | enable0    | bool       | yes   | yes    |
+|         |                | 2            | servo1     | uint8_t    | yes   | yes    |
+|         |                | 3            | enable1    | bool       | yes   | yes    |
+|         |                | 4            | servo2     | uint8_t    | yes   | yes    |
+|         |                | 5            | enable2    | bool       | yes   | yes    |
+|         |                | 6            | servo3     | uint8_t    | yes   | yes    |
+|         |                | 7            | enable3    | bool       | yes   | yes    |
+|  0x08   | LinearActuator |              |            |            |       |        |
+|  0x09   | ColorSensor    |              |            |            |       |        |
+|  0x10   | DistanceSensor |              |            |            |       |        |
+|  0x11   | MetalDetector  |              |            |            |       |        |
+|  0xFFFF | ExampleDevice  | 0            | kumiko     | bool       | yes   | yes    |
+|         |                | 1            | hazuki     | uint8_t    | yes   | yes    |
+|         |                | 2            | sapphire   | int8_t     | yes   | yes    |
+|         |                | 3            | reina      | uint16_t   | yes   | yes    |
+|         |                | 4            | asuka      | int16_t    | yes   | yes    |
+|         |                | 5            | haruka     | uint32_t   | yes   | yes    |
+|         |                | 6            | kaori      | int32_t    | yes   | yes    |
+|         |                | 7            | natsuki    | uint64_t   | yes   | yes    |
+|         |                | 8            | yuko       | int64_t    | yes   | yes    |
+|         |                | 9            | mizore     | float      | yes   | yes    |
+|         |                | 10           | nozomi     | double     | yes   | yes    |
+|         |                | 11           | shuichi    | uint8_t    | yes   | no     |
+|         |                | 12           | takuya     | uint16_t   | no    | yes    |
+|         |                | 13           | riko       | uint32_t   | yes   | no     |
+|         |                | 14           | aoi        | uint64_t   | no    | yes    |
+|         |                | 15           | noboru     | float      | yes   | no     |
+
+
      
 Note: These assignments are totally random as of now. We need to figure
       out exactly what devices we are supporting.
