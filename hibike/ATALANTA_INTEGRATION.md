@@ -41,13 +41,13 @@ MetalDetector
 
 - tells hibike to subscribe to specific paramaters of a smart device
 
-`[SM_COMMANDS.WRITE_PARAM, uid, param, value]`
+`[SM_COMMANDS.WRITE_PARAMS, uid, [(param1, value1), (param2, value2)...]]`
 
-- tells hibike to write to a specific parameter of a smart device
+- tells hibike to write to specific paramaters of a smart device
 
-`[SM_COMMANDS.READ_PARAM, uid, param, value]`
+`[SM_COMMANDS.READ_PARAMS, uid, [param1, param2, ...]`
 
-- tells hibike to read (poll) a specific parameter of a smart device
+- tells hibike to read (poll) specific paramaters of a smart device
 
 
 
@@ -62,9 +62,9 @@ MetalDetector
 
 - sent when a smart device disconnects
 
-`[SM_COMMANDS.DEVICE_VALUE, uid, param, value]`
+`[SM_COMMANDS.DEVICE_VALUES, uid, [(param1, value1), (param2, value2)...]]`
 
-- sent when the BBB receives a value from a smart device
+- sent when the BBB receives values from a smart device
 
 `[SM_COMMANDS.INVALID_UID, uid]`
 
