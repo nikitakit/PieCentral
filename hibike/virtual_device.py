@@ -28,11 +28,25 @@ conn = serial.Serial(port, 115200)
 device_type = hm.deviceTypes[device]
 year = 1
 id = random.randint(0, 0xFFFFFFFFFFFFFFFF)
+delay = 0
+subResponseTime = 0
 
 while True:
 	msg = hm.read(conn)
 	if not msg:
+                if ((delay != 0) && (subResponseTime != 0) && ((time.time() - subResponseTime) % delay == 0)#If it's time to send a data update, do what's below
+                    if (device_type == 00x0) # If the device type is a limit switch, send 4 booleans via a data update
+                        statusVars = struct.pack("<????", (true, false, false, true))
+                        dataUpdate = HibikeMessage(0x02, statusVars)
+                        hm.send(conn, dataUpdate)
+                    if 
 		time.sleep(.001)
 		continue
-	if msg.getmessageID() in (hm.messageTypes["SubscriptionRequest"], hm.messageTypes["Ping"]):
-		hm.send(conn, hm.make_sub_response(device_type, year, id, 0))
+	if msg.getmessageID() in (hm.messageTypes["SubscriptionRequest"],
+                delay = struct.unpack("<H")
+                hm.send(conn, hm.make_sub_response(device_type, year, id, delay))
+                subResponseTime = time.time()
+        if msg.getmessageID()in (hm.messageTypes["Ping"]):
+		hm.send(conn, hm.make_sub_response(device_type, year, id, delay))
+        if 
+        
