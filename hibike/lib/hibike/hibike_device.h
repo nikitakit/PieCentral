@@ -39,7 +39,7 @@ extern uint32_t device_update(uint8_t param, uint32_t value);
 
 extern uint32_t device_status(uint8_t param); 
 
-extern uint8_t data_update(uint8_t* data_update_buf, size_t buf_len);
+extern uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len);
 
 
 
