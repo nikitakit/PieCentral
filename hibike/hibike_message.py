@@ -111,10 +111,10 @@ def checksum(data):
 def send(serial_conn, message):
   m_buff = message.toByte()
   chk = checksum(m_buff)
-  m_buff.append(chr(chk))
+  m_buff.append(chk)
   encoded = cobs_encode(m_buff)
   out_buf = bytearray([0x00, len(encoded)]) + encoded
-  serial_conn.write(out_buf)
+  serial_conn.write(str(out_buf))
 
 
 def make_sub_request(delay):
@@ -224,3 +224,12 @@ def cobs_decode(data):
     if block_size + 1 < 255 and index < len(data):
       output.append(0)
   return output
+
+
+def test2_encocde():
+  message = HibikeMessage(0x00, [0x00])
+  serial_con = open('test.out', 'w')
+  send(serial_con, message)
+  print("done")
+
+test2_encocde()
