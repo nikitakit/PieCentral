@@ -101,19 +101,18 @@ int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* ui
   return send_message(&msg); 
 }
 
-
-int send_data_update(uint16_t params, uint8_t* data, uint8_t data_length) {
+//deprecated
+int send_data_update(uint16_t params, uint8_t* data, uint8_t data_length) { 
   message_t msg;
   msg.messageID = DATA_UPDATE;
-  msg.payload_length = 0;
-  int status += append_payload(&msg, (uint8_t*) &params, sizeof(params));
-  status += append_payload(&msg, data, data_length);
-
-  
-  if (status != 0) {
+  msg.payload_length = device_data_update(params, msg.payload, msg.payload_length);
+  if (msg.payload_length > MAX_PAYLOAD_SIZE) {
+    // toggleLED();
     return -1;
+  } else {
+    // send_data_update(params, hibikeBuff.payload,hibikeBuff.payload_length); //what does this do?
+    return send_message(&msg); //what does this do?
   }
-  return send_message(&msg); 
 }
 
 int send_error_packet(uint8_t error_code) {

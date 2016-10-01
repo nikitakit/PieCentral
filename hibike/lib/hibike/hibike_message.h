@@ -22,15 +22,12 @@
 
 // Enumerations
 typedef enum {
-  SUBSCRIPTION_REQUEST    = 0x00,
-  SUBSCRIPTION_RESPONSE   = 0x01,
-  DATA_UPDATE             = 0x02,
-  DEVICE_UPDATE           = 0x03,
-  DEVICE_STATUS           = 0x04,
-  DEVICE_RESPONSE         = 0x05,
-  PING_                   = 0x06,
-  DESCRIPTION_REQUEST     = 0x08,
-  DESCRIPTION_RESPONSE    = 0x09,
+  PING                    = 0x10,
+  SUBSCRIPTION_REQUEST    = 0x11,
+  SUBSCRIPTION_RESPONSE   = 0x12,
+  DEVICE_READ             = 0x13,
+  DEVICE_WRITE            = 0x14,
+  DEVICE_DATA             = 0x15,
 
   ERROR                   = 0xFF,
 } messageID;
