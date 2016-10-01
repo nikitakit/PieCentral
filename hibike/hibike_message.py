@@ -19,15 +19,15 @@ messageTypes = {
 
 # Dictionary of device types: enumeration
 deviceTypes = {
-  "Limit Switch" :         0x00,
-  "Line Follower" :        0x01,
+  "LimitSwitch" :         0x00,
+  "LineFollower" :        0x01,
   "Potentiometer" :        0x02,
   "Encoder" :              0x03,
-  "Battery Buzzer" :       0x04,
-  "Team Flag" :            0x05,
+  "BatteryBuzzer" :       0x04,
+  "TeamFlag" :            0x05,
   "Grizzly" :              0x06,
-  "Servo Control" :        0x07,
-  "Linear Actuator" :      0x08
+  "ServoControl" :        0x07,
+  "LinearActuator" :      0x08
 }
 
 
@@ -117,11 +117,19 @@ def send(serial_conn, message):
   serial_conn.write(str(out_buf))
 
 
+
 def make_sub_request(delay):
   """ Makes and returns SubscriptionRequest message."""
   temp_payload = struct.pack('<H', delay)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionRequest"], payload)
+  return message
+
+def make_sub_response(device_type, year, id, delay):
+  """ Makes and returns SubscriptionResponse message."""
+  temp_payload = struct.pack('<HBQH', device_type, year, id, delay)
+  payload = bytearray(temp_payload)
+  message = HibikeMessage(messageTypes["SubscriptionResponse"], payload)
   return message
 
 def make_device_update(param, value):
@@ -215,7 +223,7 @@ def cobs_decode(data):
   output = bytearray()
   index = 0
   while (index < len(data)):
-    block_size = ord(data[index]) - 1
+    block_size = data[index] - 1
     index += 1
     if index + block_size > len(data):
       return bytearray()
