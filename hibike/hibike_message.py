@@ -110,10 +110,14 @@ def checksum(data):
 # Then sends each byte of the message, and finally sends the checksum byte
 def send(serial_conn, message):
   m_buff = message.toByte()
+  #printByteArray(serial_conn, "message", m_buff)         #remove
   chk = checksum(m_buff)
   m_buff.append(chk)
+  #printByteArray(serial_conn, "all unencoded", m_buff)   #remove
   encoded = cobs_encode(m_buff)
-  out_buf = bytearray([0x00, len(encoded)]) + encoded
+  #printByteArray(serial_conn, "encoded", encoded)        #remove
+  out_buf = bytearray([0x00, len(encoded)-1]) + encoded
+  #printByteArray(serial_conn, "final", out_buf)          #remove 
   serial_conn.write(str(out_buf))
 
 
@@ -234,10 +238,46 @@ def cobs_decode(data):
   return output
 
 
-def test2_encocde():
-  message = HibikeMessage(0x00, [0x00])
-  serial_con = open('test.out', 'w')
-  send(serial_con, message)
-  print("done")
+def printByteArray(serial_conn, title, arr):
+  serial_conn.write(title)
+  serial_conn.write(": ")
+  newList = [format(n, '#04x') for n in arr]
+  serial_conn.write(str(newList))
+  serial_conn.write("\n")
 
-test2_encocde()
+def test2_encocde():
+  message = HibikeMessage(0x01, [0x01])
+  serial_conn = open('test.out', 'w')
+  send(serial_conn, message)
+  print("done with test 2 encode")
+  return serial_conn
+
+def test2_unencode():
+  serial_conn = test2_encocde()
+  hibikeMessage = read(serial_conn)
+  printByteArray(serial_conn, "payload", hibikeMessage.payload())
+  print("done with test2_unencode")
+
+def test3_encocde():
+  message = HibikeMessage(0x01, [0x00])
+  serial_conn = open('test.out', 'w')
+  send(serial_conn, message)
+  print("done with test 3 encode")
+  return serial_conn
+
+def test4_encocde():
+  message = HibikeMessage(0x01, [0x11, 0x22])
+  serial_conn = open('test.out', 'w')
+  send(serial_conn, message)
+  print("done with test 4 encode")
+  return serial_conn
+
+def test5_encocde():
+  message = HibikeMessage(0x01, [0x11, 0x22, 0x00, 0x33, 0x00])
+  serial_conn = open('test.out', 'w')
+  send(serial_conn, message)
+  print("done with test 5 encode")
+  return serial_conn
+
+test2_unencode()
+
