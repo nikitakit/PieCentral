@@ -3,9 +3,10 @@
 char *DESCRIPTION = DESCRIPTOR;
 
 message_t hibikeBuff;
-
+message_t sendRespBuff;
 uint64_t prevTime, currTime, heartbeatTime;
-uint8_t param;
+// uint8_t param;
+uint16_t params;
 uint32_t value;
 uint16_t subDelay;
 led_state heartbeat_state;
@@ -35,7 +36,8 @@ void hibike_loop() {
 
         case SUBSCRIPTION_REQUEST:
           // change subDelay and send SUB_RESP
-          subDelay = *((uint16_t*) &hibikeBuff.payload[0]);
+          subDelay = *((uint16_t*) &hibikeBuff.payload[2]);
+          params = *((uint16_t*) &hibikeBuff.payload[0]);
           send_subscription_response(&UID, subDelay);
           break;
 
@@ -49,15 +51,16 @@ void hibike_loop() {
           toggleLED();
           break;
 
-        case DEVICE_UPDATE:
+        case DEVICE_WRITE:
           param = hibikeBuff.payload[0] - 1;
           value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
           send_device_response(param + 1, device_update(param, value));
           break;
 
-        case DEVICE_STATUS:
-          param = hibikeBuff.payload[0] - 1;
-          send_device_response(param + 1, device_status(param));
+        case DEVICE_READ:
+          send_data_update(hibikeBuff.payload[0]);
+          // param = hibikeBuff.payload[0] - 1;
+          // send_device_response(param + 1, device_status(param));
           break;
 
         case DEVICE_RESPONSE:
@@ -69,9 +72,9 @@ void hibike_loop() {
           send_subscription_response(&UID, subDelay);
           break;
 
-        case DESCRIPTION_REQUEST:
-          send_description_response(DESCRIPTION);
-          break;
+        // case DESCRIPTION_REQUEST:
+        //   send_description_response(DESCRIPTION);
+        //   break;
 
         default:
           // Uh oh...
@@ -120,16 +123,22 @@ void hibike_loop() {
   }
 
   // DataUpdates
+  // if ((subDelay > 0) && (currTime - prevTime >= subDelay)) {
+  //   prevTime = currTime;
+  //   //hibikeBuff.messageID = DATA_UPDATE;
+  //   hibikeBuff.payload_length = data_update(hibikeBuff.payload, sizeof(hibikeBuff.payload));
+  //   if (hibikeBuff.payload_length > MAX_PAYLOAD_SIZE) {
+  //     toggleLED();
+  //   } else {
+  //     send_message(&hibikeBuff); //what does this do?
+  //   }
+  // }
+
   if ((subDelay > 0) && (currTime - prevTime >= subDelay)) {
     prevTime = currTime;
-    hibikeBuff.messageID = DATA_UPDATE;
-    hibikeBuff.payload_length = data_update(hibikeBuff.payload, sizeof(hibikeBuff.payload));
-    if (hibikeBuff.payload_length > MAX_PAYLOAD_SIZE) {
-      toggleLED();
-    } else {
-      send_message(&hibikeBuff);
-    }
+    send_data_update(params);
   }
+
 
 }
 

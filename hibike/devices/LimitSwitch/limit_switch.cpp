@@ -37,7 +37,9 @@ uint32_t device_status(uint8_t param) {
 //
 // You can use the helper function append_buf.
 // append_buf copies the specified amount data into the dst buffer and increments the offset
-uint8_t data_update(uint8_t* data_update_buf, size_t buf_len) {
+
+
+uint8_t device_data_update(uint16_t params, uint8_t* data_update_buf, size_t buf_len) {
 
   if (buf_len < sizeof(uint8_t) * NUM_SWITCHES) {
     return 0;
@@ -45,9 +47,28 @@ uint8_t data_update(uint8_t* data_update_buf, size_t buf_len) {
 
   uint8_t *data = (uint8_t *) data_update_buf;
   // Read sensor
-  for (int i = 0; i < NUM_SWITCHES; i++) {
-      data[i] = 1 - digitalRead(pins[i]);  
+  int i=0;
+  for (int count = 0; params > 0; params = params>>1) {
+      if (params & 1){
+        data[i] = 1 - digitalRead(pins[i]);
+        i++;
+      }
+      count++;
   }
-  return sizeof(uint8_t) * NUM_SWITCHES;
+  return sizeof(uint8_t) * i;
 
 }
+// uint8_t data_update(uint8_t* data_update_buf, size_t buf_len) {
+
+//   if (buf_len < sizeof(uint8_t) * NUM_SWITCHES) {
+//     return 0;
+//   }
+
+//   uint8_t *data = (uint8_t *) data_update_buf;
+//   // Read sensor
+//   for (int i = 0; i < NUM_SWITCHES; i++) {
+//       data[i] = 1 - digitalRead(pins[i]);  //what does this do
+//   }
+//   return sizeof(uint8_t) * NUM_SWITCHES;
+
+// }
