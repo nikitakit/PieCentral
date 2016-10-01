@@ -69,7 +69,6 @@ class HibikeMessage:
   def toByte(self):
     m_buff = bytearray()
     m_buff.append(self._messageID)
-    m_buff.append(self._length)
     m_buff.extend(self.getPayload())
     return m_buff
 
@@ -180,12 +179,13 @@ def read(serial_conn):
 
   if len(message) < 2:
     return None
-  messageID, payloadLength = struct.unpack('<BB', message[:2])
+  messageID = struct.unpack('<B', message[:1])
+  payloadLength = message_size - 2
   if len(message) < 2 + payloadLength + 1:
     return None
-  payload = message[2:2 + payloadLength]
+  payload = message[1:1 + payloadLength]
 
-  chk = struct.unpack('<B', message[2+payloadLength:2+payloadLength+1])[0]
+  chk = struct.unpack('<B', message[1+payloadLength:1+payloadLength+1])[0]
   if chk != checksum(message[:-1]):
     print(chk, checksum(message[:-1]), list(message))
     return -1
