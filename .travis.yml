@@ -1,10 +1,13 @@
 language: node_js
 node_js:
 - "4"
+addons:
+  apt:
+    packages:
+    - pylint
 install:
 - make dawn-install
 script:
-- apt-get install -qq pylint
 - pylint ./runtime/testy/runtime.py
 - make dawn-test
 - make dawn-lint
