@@ -8,7 +8,7 @@ addons:
 install:
 - make dawn-install
 script:
-- pylint ./runtime/testy/runtime.py
+- ./pylint.sh
 - make dawn-test
 - make dawn-lint
 branches:
