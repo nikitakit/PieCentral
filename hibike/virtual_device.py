@@ -32,21 +32,22 @@ delay = 0
 subResponseTime = 0
 update_count = 1
 
-while True:
-        if ((subResponseTime != 0) && ((time.time() - subResponseTime) >= (delay * .001 * update_count)): #If the time equal to the delay has elapsed since the previous data update, send a data update                                            
-            if device_type in (hm.deviceTypes["LimitSwitch"]):  # If the device type is a limit switch, send 4 arbitrary booleans
-                 statusVars = struct.pack("<????", (true, false, false, true))
-            if device_type in (hm.deviceTypes["ServoControl"]): # If the device is a servo control, send an empty packet
-                 statusVars = struct.pack("<", ())
+while (True):
+        if (subResponseTime != 0):
+                if((time.time() - subResponseTime) >= (delay * 0.001 * update_count)): #If the time equal to the delay has elapsed since the previous data update, send a data update                                            
+                        if device_type in (hm.deviceTypes["LimitSwitch"]):  # If the device type is a limit switch, send 4 arbitrary booleans
+                                statusVars = struct.pack("<????", (true, false, false, true))
+                        if device_type in (hm.deviceTypes["ServoControl"]): # If the device is a servo control, send an empty packet
+                                statusVars = struct.pack("<", ())
 
-            dataUpdate = HibikeMessage(hm.messageTypes("DataUpdate", statusVars)
-            hm.send(conn, dataUpdate)
+                        dataUpdate = HibikeMessage(hm.messageTypes["DataUpdate"], statusVars)
+                        hm.send(conn, dataUpdate)
              
-	msg = hm.read(conn)
-	if not msg:
+        msg = hm.read(conn)
+        if not msg:
              time.sleep(.001)
              continue
-	if msg.getmessageID() in (hm.messageTypes["SubscriptionRequest"]): #Update the delay and subscription time, and send a subscription response 
+        if msg.getmessageID() in (hm.messageTypes["SubscriptionRequest"]): #Update the delay and subscription time, and send a subscription response 
              delay = struct.unpack("<H")
              hm.send(conn, hm.make_sub_response(device_type, year, id, delay))
              subResponseTime = time.time()
@@ -64,3 +65,5 @@ while True:
              deviceResponse = HibikeMessage(hm.messageTypes["DeviceResponse"], responsePayload)
              hm.send(conn, deviceResponse)
                                 
+if __name__ == "main":
+        main()
