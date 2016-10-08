@@ -1,1 +1,1 @@
-pylint ./runtime/testy/runtime.py
+pylint ./runtime/testy/*.py
