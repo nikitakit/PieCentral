@@ -7,9 +7,16 @@ Design, document and implementat the next version of the hibike protocol. See RE
 ### Tasks:
 
 - Test actual usb-serial throughput
+	- currently unassigned
+	- someone should test the actual bytes/second we can get between an adruino micro and a BBB
 - Update protocol documentation
-- Rewrite hibike_message.py
-- Rewrite lib/hibike
+	- done
+- Add message constructors hibike_message.py
+	- assigned to Hong Jun
+- Add message constructors lib/hibike
+	- assigned to Tiffany
+- Implement new packet structure on both sides
+	- assigned to Caroline
 
 ## Python Rewrite / Concurrency (hibike/concurrency)
 
@@ -41,6 +48,7 @@ Implement smart device simulators for testing hibike/runtime without physical se
 ### Tasks:
 
 - Write python clients that simulates the behavior of real smart devices
+    - assigned to Ivan
 - Write scripts to spawn/despawn these virtual devices and allow hibike to find them
     - Probably need some config file
 - Make the virtual smart sensors to fail/behave erratically in different ways to test hibike
