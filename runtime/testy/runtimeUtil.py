@@ -5,11 +5,23 @@ from enum import Enum, unique
 
 @unique
 class BAD_EVENTS(Enum):
+<<<<<<< HEAD
     BAD_EVENT = "BAD THINGS HAPPENED"
     STUDENT_CODE_ERROR = "Student Code Crashed"
     STUDENT_CODE_TIMEOUT = "Student Code Timed Out"
     UNKNOWN_PROCESS = "Unknown State Manager process name"
 
+=======
+  BAD_EVENT                 = "BAD THINGS HAPPENED"
+  STUDENT_CODE_ERROR        = "Student Code Crashed"
+  STUDENT_CODE_VALUE_ERROR  = "Student Code Value Error"
+  STUDENT_CODE_TIMEOUT      = "Student Code Timed Out"
+  UNKNOWN_PROCESS           = "Unknown State Manager process name"
+  STATE_MANAGER_KEY_ERROR   = "Error accessing key in State Manager"
+  END_EVENT                 = "Process terminated" # Used for testing
+
+restartEvents = [BAD_EVENTS.STUDENT_CODE_ERROR, BAD_EVENTS.STUDENT_CODE_TIMEOUT, BAD_EVENTS.END_EVENT]
+>>>>>>> 811f95983336b3df3b93fe4ffaf865731679e34b
 
 @unique
 class PROCESS_NAMES(Enum):
@@ -35,6 +47,7 @@ class SM_COMMANDS(Enum):
     GET_VAL = ()
     SET_VAL = ()
 
+<<<<<<< HEAD
 
 class RUNTIME_CONFIG(Enum):
     STUDENT_CODE_TIMEOUT = 3
@@ -42,6 +55,20 @@ class RUNTIME_CONFIG(Enum):
     DEBUG_DELIMITER_STRING = "****************** RUNTIME DEBUG ******************"
     PIPE_READY = ["ready"]
 
+=======
+  RESET               = ()
+  ADD                 = ()
+  STUDENT_MAIN_OK     = ()
+  GET_VAL             = ()
+  SET_VAL             = ()
+
+class RUNTIME_CONFIG(Enum):
+  STUDENT_CODE_TIMEOUT        = 3
+  STUDENT_CODE_HZ             = 20 # Number of times to execute studentCode.main per second
+  DEBUG_DELIMITER_STRING      = "****************** RUNTIME DEBUG ******************"
+  PIPE_READY                  = ["ready"]
+  TEST_OUTPUT_DIR             = "test_outputs/"
+>>>>>>> 811f95983336b3df3b93fe4ffaf865731679e34b
 
 class BadThing:
     def __init__(self,
@@ -72,6 +99,12 @@ class BadThing:
         else:
             return str(self.data)
 
+
+class StudentAPIError(Exception):
+  pass
+
+class StudentAPIKeyError(StudentAPIError):
+  pass
 
 class TimeoutError(Exception):
     pass
