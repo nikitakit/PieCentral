@@ -58,7 +58,8 @@ void hibike_loop() {
           break;
 
         case DEVICE_READ:
-          send_data_update(hibikeBuff.payload[0]);
+
+          send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
           // param = hibikeBuff.payload[0] - 1;
           // send_device_response(param + 1, device_status(param));
           break;
