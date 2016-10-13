@@ -101,8 +101,8 @@ int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* ui
   return send_message(&msg); 
 }
 
-//deprecated
-int send_data_update(uint16_t params, uint8_t* data, uint8_t data_length) { 
+//deprecated but not really
+int send_data_update(uint16_t params) { 
   message_t msg;
   msg.messageID = DATA_UPDATE;
   msg.payload_length = device_data_update(params, msg.payload, msg.payload_length);
