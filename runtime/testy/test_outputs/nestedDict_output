@@ -7,7 +7,7 @@ Get Info2: 1
 CODE LOOP
 Get Info: 1
 Get Info2: 1
-BAD_EVENTS.END_EVENT
+BAD_EVENTS.END_EVENT, Process Ended
 CODE LOOP
 Get Info: 555
 Get Info2: 1
@@ -17,7 +17,7 @@ Get Info2: 1
 CODE LOOP
 Get Info: 1
 Get Info2: 1
-BAD_EVENTS.END_EVENT
+BAD_EVENTS.END_EVENT, Process Ended
 CODE LOOP
 Get Info: 555
 Get Info2: 1
@@ -27,6 +27,6 @@ Get Info2: 1
 CODE LOOP
 Get Info: 1
 Get Info2: 1
-BAD_EVENTS.END_EVENT
+BAD_EVENTS.END_EVENT, Process Ended
 Funtime Runtime is done having fun.
 TERMINATING

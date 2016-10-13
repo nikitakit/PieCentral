@@ -39,3 +39,11 @@ def studentCodeMainCount_setup():
 
 def studentCodeMainCount_main():
   print(Robot.getValue("runtime_meta", "studentCode_main_count"))
+
+def sendProcessToStateManager_setup():
+  pass
+
+def sendProcessToStateManager_main():
+  import multiprocessing
+  print(multiprocessing.current_process().name)
+  del multiprocessing # make sure import is no longer accessible

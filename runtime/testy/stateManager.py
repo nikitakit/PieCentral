@@ -27,7 +27,7 @@ class StateManager(object):
     }
     return commandMapping
 
-  def initRobotState(self):
+  def initRobotState(self, callingProcess=None):
     self.state = {
      "incrementer" : 2,
      "int1" : 112314,
@@ -39,11 +39,11 @@ class StateManager(object):
      "runtime_meta" : {"studentCode_main_count" : 0}
     }
 
-  def addPipe(self, processName, pipe):
+  def addPipe(self, callingProcess, processName, pipe):
     self.processMapping[processName] = pipe
     pipe.send(RUNTIME_CONFIG.PIPE_READY.value)
 
-  def getValue(self, keys):
+  def getValue(self, callingProcess, keys):
     result = self.state
     try:
       for key in enumerate(keys):
@@ -54,7 +54,7 @@ class StateManager(object):
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
 
-  def setValue(self, value, keys):
+  def setValue(self, callingProcess, value, keys):
     currDict = self.state
     i = 0
     try:
@@ -69,7 +69,7 @@ class StateManager(object):
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, currDict))
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
 
-  def studentCodeTick(self):
+  def studentCodeTick(self, callingProcess):
     self.state["runtime_meta"]["studentCode_main_count"] += 1
 
   def dictErrorMessage(self, erroredIndex, keys, currDict):
@@ -100,13 +100,17 @@ class StateManager(object):
     # And that there are the correct number of elements
     while True:
       request = self.input.get(block=True)
-      cmdType = request[0]
-      args = request[1]
 
-      if(len(request) != 2):
-        self.badThingsQueue.put(BadThing(sys.exc_info(), "Wrong input size, need list of size 2", event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
-      elif(cmdType not in self.commandMapping):
+      listSize = 3
+      if(len(request) != listSize):
+        self.badThingsQueue.put(BadThing(sys.exc_info(), "Wrong input size, need list of size {0}, got size {1}".format(listSize, len(request)), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
+
+      cmdType = request[0]
+      processName = request[1]
+      args = request[2]
+
+      if(cmdType not in self.commandMapping):
         self.badThingsQueue.put(BadThing(sys.exc_info(), "Unknown process name: %s" % (request,), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
       else:
         command = self.commandMapping[cmdType]
-        command(*args)
+        command(processName, *args)
