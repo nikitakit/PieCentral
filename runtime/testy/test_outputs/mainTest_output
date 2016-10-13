@@ -3,18 +3,18 @@ Saying hello to the other side
 DAT: 1.0
 Get Info: 1
 Saying hello to the other side
-BAD_EVENTS.STUDENT_CODE_ERROR
+BAD_EVENTS.STUDENT_CODE_ERROR, None
 Get Info: 2
 Saying hello to the other side
 DAT: 1.0
 Get Info: 1
 Saying hello to the other side
-BAD_EVENTS.STUDENT_CODE_ERROR
+BAD_EVENTS.STUDENT_CODE_ERROR, None
 Get Info: 2
 Saying hello to the other side
 DAT: 1.0
 Get Info: 1
 Saying hello to the other side
-BAD_EVENTS.STUDENT_CODE_ERROR
+BAD_EVENTS.STUDENT_CODE_ERROR, None
 Funtime Runtime is done having fun.
 TERMINATING

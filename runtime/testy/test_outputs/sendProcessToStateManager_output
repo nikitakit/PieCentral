@@ -1,17 +1,14 @@
-test0_setup
-test0_main
-test0_main
-test0_main
+studentProcess
+studentProcess
+studentProcess
 BAD_EVENTS.END_EVENT, Process Ended
-test0_setup
-test0_main
-test0_main
-test0_main
+studentProcess
+studentProcess
+studentProcess
 BAD_EVENTS.END_EVENT, Process Ended
-test0_setup
-test0_main
-test0_main
-test0_main
+studentProcess
+studentProcess
+studentProcess
 BAD_EVENTS.END_EVENT, Process Ended
 Funtime Runtime is done having fun.
 TERMINATING

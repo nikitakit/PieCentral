@@ -68,3 +68,11 @@ def createKey_main():
   print("Success!")
   restarts = Robot.getValue("Restarts")
   Robot.setValue(restarts+1, "Restarts")
+
+def sendProcessToStateManager_setup():
+  pass
+
+def sendProcessToStateManager_main():
+  import multiprocessing
+  print(multiprocessing.current_process().name)
+  del multiprocessing # make sure import is no longer accessible

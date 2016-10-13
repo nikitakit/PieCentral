@@ -34,9 +34,7 @@ allProcesses = {}
 
 
 def runtime():
-  badThingsQueue = multiprocessing.Queue()
-  stateQueue = multiprocessing.Queue()
-  spawnProcess = processFactory(badThingsQueue, stateQueue)
+  badThingsQueue, stateQueue, spawnProcess = runtimeSetup()
   restartCount = 0
   try:
     spawnProcess(PROCESS_NAMES.STATE_MANAGER, startStateManager)
@@ -147,9 +145,7 @@ def runtimeTest():
 
       allProcesses.clear()
 
-      badThingsQueue = multiprocessing.Queue()
-      stateQueue = multiprocessing.Queue()
-      spawnProcess = processFactory(badThingsQueue, stateQueue, sys.stdout)
+      badThingsQueue, stateQueue, spawnProcess = runtimeSetup()
       restartCount = 0
 
       try:
@@ -160,7 +156,7 @@ def runtimeTest():
           spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode, testName, 3)
           while True:
             newBadThing = badThingsQueue.get(block=True)
-            print(newBadThing.event)
+            print(newBadThing.event, newBadThing.data, sep=', ')
             if newBadThing.event in restartEvents:
               break
           stateQueue.put([SM_COMMANDS.RESET, []])
@@ -169,7 +165,9 @@ def runtimeTest():
         print("Funtime Runtime is done having fun.")
         print("TERMINATING")
       except:
+        print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
         print("Funtime Runtime Had Too Much Fun")
+        print(traceback.print_exception(*sys.exc_info()))
 
     if not testSuccess(testFileName):
       # Explicitly set output to terminal, since we overwrote it earlier
@@ -189,6 +187,18 @@ def runtimeTest():
     for testName in failedTests:
       print("    {0}".format(testName))
 
+def runtimeSetup():
+  badThingsQueue = multiprocessing.Queue()
+  stateQueue = multiprocessing.Queue()
+  origPut = stateQueue.put
+  def wrappedPut(x, destinationProcess=None, *args, **kwargs):
+    if destinationProcess == None:
+      destinationProcess = multiprocessing.current_process().name
+    x.insert(1, destinationProcess)
+    origPut(x, *args, **kwargs)
+  stateQueue.put = wrappedPut
+  spawnProcess = processFactory(badThingsQueue, stateQueue)
+  return badThingsQueue, stateQueue, spawnProcess
 
 def testSuccess(testFileName):
   expectedOutput = RUNTIME_CONFIG.TEST_OUTPUT_DIR.value + testFileName
