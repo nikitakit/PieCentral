@@ -54,10 +54,9 @@ uint8_t checksum(uint8_t* data, int length);
 int send_message(message_t* msg);
 int read_message(message_t* msg);
 
-int send_subscription_response(hibike_uid_t* uid, uint16_t delay);
-int send_data_update(uint8_t* data, uint8_t payload_length);
-int send_device_response(uint8_t param, uint32_t value);
-int send_description_response(char* description);
+int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* uid);
+int send_data_update(uint16_t params);
+int send_error_packet(uint8_t error_code);
 int append_payload(message_t* msg, uint8_t* data, uint8_t length);
 void append_buf(uint8_t* buf, uint8_t* offset, uint8_t* data, uint8_t length);
 
@@ -67,5 +66,15 @@ uint32_t uint32_from_message(message_t* msg, uint8_t* offset);
 uint64_t uint64_from_message(message_t* msg, uint8_t* offset);
 
 void message_to_byte(uint8_t* data, message_t* msg);
+
+
+
+extern uint32_t device_update(uint8_t param, uint32_t value); 
+
+extern uint32_t device_status(uint8_t param); 
+
+extern uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len);
+
+
 
 #endif /* HIBIKE_H */
