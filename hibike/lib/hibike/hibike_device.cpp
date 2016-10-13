@@ -3,7 +3,6 @@
 char *DESCRIPTION = DESCRIPTOR;
 
 message_t hibikeBuff;
-message_t sendRespBuff;
 uint64_t prevTime, currTime, heartbeatTime;
 // uint8_t param;
 uint16_t params;
@@ -38,7 +37,7 @@ void hibike_loop() {
           // change subDelay and send SUB_RESP
           subDelay = *((uint16_t*) &hibikeBuff.payload[2]);
           params = *((uint16_t*) &hibikeBuff.payload[0]);
-          send_subscription_response(&UID, subDelay);
+          send_subscription_response(params, subDelay, &UID);
           break;
 
         case SUBSCRIPTION_RESPONSE:
@@ -46,15 +45,11 @@ void hibike_loop() {
           toggleLED();
           break;
 
-        case DATA_UPDATE:
-          // Unsupported packet
-          toggleLED();
-          break;
-
         case DEVICE_WRITE:
-          param = hibikeBuff.payload[0] - 1;
+          params = hibikeBuff.payload[0] - 1;
           value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
-          send_device_response(param + 1, device_update(param, value));
+          //write values
+          send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
           break;
 
         case DEVICE_READ:
@@ -64,13 +59,13 @@ void hibike_loop() {
           // send_device_response(param + 1, device_status(param));
           break;
 
-        case DEVICE_RESPONSE:
+        case DEVICE_DATA:
           // Unsupported packet
           toggleLED();
           break;
 
-        case PING_:
-          send_subscription_response(&UID, subDelay);
+        case PING:
+          send_subscription_response(params, subDelay, &UID);
           break;
 
         // case DESCRIPTION_REQUEST:

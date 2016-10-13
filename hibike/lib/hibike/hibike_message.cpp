@@ -86,7 +86,7 @@ int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* ui
   msg.messageID = SUBSCRIPTION_RESPONSE;
   msg.payload_length = 0;
 
-  int status += append_payload(&msg, (uint8_t*) &params, sizeof(params));
+  int status = append_payload(&msg, (uint8_t*) &params, sizeof(params));
   
   status += append_payload(&msg, (uint8_t*) &delay, sizeof(delay));
   
@@ -104,8 +104,26 @@ int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* ui
 //deprecated but not really
 int send_data_update(uint16_t params) { 
   message_t msg;
-  msg.messageID = DATA_UPDATE;
-  msg.payload_length = device_data_update(params, msg.payload, msg.payload_length);
+  msg.messageID = DEVICE_DATA;
+  msg.payload_length = 0;
+
+
+  int i=2;
+  for (uint16_t count = 0; (params >> count) > 0; count++) {
+      if (params & (1<<count)){
+        int bytes_written = device_data_update(count, &msg.payload[i], msg.payload_length);
+        if(bytes_written){
+          i += bytes_written;
+          msg.payload_length += bytes_written;
+        }
+        else{
+          params = params & ~(1<<count);
+        }
+      }
+  }
+
+  *((uint16_t *) &msg.payload[0]) = params;
+
   if (msg.payload_length > MAX_PAYLOAD_SIZE) {
     // toggleLED();
     return -1;
@@ -117,10 +135,10 @@ int send_data_update(uint16_t params) {
 
 int send_error_packet(uint8_t error_code) {
   message_t msg;
-  msg.messageID = ERROR_RESPONSE;
+  msg.messageID = ERROR;
   msg.payload_length = 0;
 
-  int status += append_payload(&msg, (uint8_t*) &error_code, sizeof(error_code);
+  int status = append_payload(&msg, (uint8_t*) &error_code, sizeof(error_code));
 
   if (status != 0) {
     return -1;
