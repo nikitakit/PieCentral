@@ -240,7 +240,8 @@ def make_device_write(device_id, params_and_values):
   params = [param[0] for param in params_and_values]
   paramNums = [paramMap[device_id][name][0] for name in params]
   paramT = [paramMap[device_id][name][1] for name in params]
-  values = [params[1] for param in params_and_values]
+  values = [param[1] for param in params_and_values]
+  entries = [1 << num for num in paramNums]
 
   tot = 0
   for i in range(len(entries)):
