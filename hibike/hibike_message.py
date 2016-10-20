@@ -237,6 +237,7 @@ def make_device_write(device_id, params_and_values):
       device_id         - a device type id (not uid).
       params_and_values - an iterable of param (name, value) tuples
   """
+  params_and_values = sorted(params_and_values, key=lambda x: paramMap[device_id][x[0]][0])
   params = [param[0] for param in params_and_values]
   paramNums = [paramMap[device_id][name][0] for name in params]
   paramT = [paramMap[device_id][name][1] for name in params]
