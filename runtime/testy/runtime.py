@@ -12,6 +12,7 @@ import studentAPI
 
 from runtimeUtil import *
 
+
 # TODO:
 # 0. Set up testing code for the following features.
 # DONE 1. Have student code go through api to modify state.
@@ -51,8 +52,7 @@ def runtime():
                 newBadThing = badThingsQueue.get(block=True)
                 print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
                 print(newBadThing)
-                if (newBadThing.event == BAD_EVENTS.STUDENT_CODE_ERROR) or (
-                        newBadThing.event == BAD_EVENTS.STUDENT_CODE_TIMEOUT):
+                if newBadThing.event in restartEvents:
                     break
             stateQueue.put([SM_COMMANDS.RESET, []])
             os.kill(allProcesses[PROCESS_NAMES.STUDENT_CODE].pid,
@@ -63,10 +63,8 @@ def runtime():
         print("TERMINATING")
     except:
         print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-<<<<<<< HEAD
         print("Funtime Runtime Had Too Much Fun")
         print(traceback.print_exception(*sys.exc_info()))
-
 
 def runStudentCode(badThingsQueue, stateQueue, pipe):
     try:
@@ -106,7 +104,6 @@ def runStudentCode(badThingsQueue, stateQueue, pipe):
             BadThing(
                 sys.exc_info(), None, event=BAD_EVENTS.STUDENT_CODE_ERROR))
 
-=======
         print(newBadThing)
         if newBadThing.event in restartEvents:
           break
@@ -166,7 +163,6 @@ def runStudentCode(badThingsQueue, stateQueue, pipe, testName = "", maxIter = 0)
     badThingsQueue.put(BadThing(sys.exc_info(), None, event=BAD_EVENTS.STUDENT_CODE_ERROR))
   except Exception: #something broke in student code
     badThingsQueue.put(BadThing(sys.exc_info(), None, event=BAD_EVENTS.STUDENT_CODE_ERROR))
->>>>>>> 811f95983336b3df3b93fe4ffaf865731679e34b
 
 def startStateManager(badThingsQueue, stateQueue, runtimePipe):
     try:
@@ -176,7 +172,6 @@ def startStateManager(badThingsQueue, stateQueue, runtimePipe):
         badThingsQueue.put(BadThing(sys.exc_info(), None))
 
 
-<<<<<<< HEAD
 def processFactory(badThingsQueue, stateQueue):
     def spawnProcessHelper(processName, helper):
         pipeToChild, pipeFromChild = multiprocessing.Pipe()
@@ -193,7 +188,6 @@ def processFactory(badThingsQueue, stateQueue):
 
     return spawnProcessHelper
 
-=======
 def processFactory(badThingsQueue, stateQueue, stdoutRedirect = None):
   def spawnProcessHelper(processName, helper, *args):
     pipeToChild, pipeFromChild = multiprocessing.Pipe()
@@ -205,7 +199,6 @@ def processFactory(badThingsQueue, stateQueue, stdoutRedirect = None):
     newProcess.daemon = True
     newProcess.start()
   return spawnProcessHelper
->>>>>>> 811f95983336b3df3b93fe4ffaf865731679e34b
 
 def runtimeTest():
   # Normally dangerous. Allowed here because we put testing code there.
@@ -273,8 +266,7 @@ def testSuccess(testFileName):
   return filecmp.cmp(expectedOutput, testOutput)
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     runtime()
 =======
   runtimeTest()
->>>>>>> 811f95983336b3df3b93fe4ffaf865731679e34b
+
