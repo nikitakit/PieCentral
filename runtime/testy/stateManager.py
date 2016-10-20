@@ -54,7 +54,7 @@ class StateManager(object):
     self.processMapping[processName] = pipe
     pipe.send(RUNTIME_CONFIG.PIPE_READY.value)
 
-  def createKey(self, keys):
+  def createKey(self, callingProcess, keys):
     currDict = self.state
     for key in keys:
       try:
@@ -64,9 +64,9 @@ class StateManager(object):
       except TypeError:
         error = StudentAPIKeyError(
           "key '{}' is defined, but does not contain a dictionary.".format(key))
-        self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+        self.processMapping[callingProcess].send(error)
         return
-    self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(None)
+    self.processMapping[callingProcess].send(None)
 
   def getValue(self, callingProcess, keys):
     result = self.state
@@ -74,10 +74,10 @@ class StateManager(object):
       for key in enumerate(keys):
         i = key[0]
         result = result[key[1]]
-      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(result)
+      self.processMapping[callingProcess].send(result)
     except:
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
-      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+      self.processMapping[callingProcess].send(error)
 
   def setValue(self, callingProcess, value, keys):
     currDict = self.state
@@ -91,10 +91,10 @@ class StateManager(object):
       if keys[i] not in currDict:
         raise Exception
       currDict[keys[i]] = value
-      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(value)
+      self.processMapping[callingProcess].send(value)
     except:
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, currDict))
-      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+      self.processMapping[callingProcess].send(error)
 
   def studentCodeTick(self, callingProcess):
     self.state["runtime_meta"]["studentCode_main_count"] += 1
@@ -141,6 +141,7 @@ class StateManager(object):
       request = self.input.get(block=True)
 
       listSize = 3
+
       if(len(request) != listSize):
         self.badThingsQueue.put(BadThing(sys.exc_info(), "Wrong input size, need list of size {0}, got size {1}".format(listSize, len(request)), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
 
