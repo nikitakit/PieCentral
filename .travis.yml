@@ -5,7 +5,10 @@ addons:
   apt:
     packages:
     - pylint
-    - python-scipy
+    - python-setuptools python-dev build-essential
+before_install:
+- sudo easy_install pip
+- sudo pip install --upgrade virtualenv
 install:
 - make dawn-install
 script:
