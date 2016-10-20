@@ -8,8 +8,8 @@ import json
 
 config_file = open(os.path.join(os.path.dirname(__file__), 'hibikeDevices.json'), 'r')
 devices = json.load(config_file)
-devices = {device["id"]: device for device in devices}
-nameMap = {device["name"]: device["number"] for device in devices}
+#devices = {device["id"]: device for device in devices}
+paramMap = {device["id"]: {param["name"]: param["number"] for param in device["params"]} for device in devices}
 
 """
 structure of devices
@@ -184,14 +184,14 @@ def make_subscription_request(device_id, params, delay):
       delay     - the delay in milliseconds
       struct.pack('%sf' % len(floatlist), *floatlist)
   """
-  paramNums = [nameMap[name] for name in params]
+  paramNums = [paramMap[device_id][name] for name in params]
   entries = [1 << num for num in paramNums]
   tot = 0
   for i in range(len(entries)):
     tot = tot ^ entries[i]
   temp_payload = struct.pack('<HH', tot, delay)
   payload = bytearray(temp_payload)
-  message = HibikeMessage(device_id, payload)
+  message = HibikeMessage(messageTypes["SubscriptionRequest"], payload)
   return message
   
 
@@ -217,9 +217,14 @@ def make_device_read(device_id, params):
       device_id - a device type id (not uid).
       params    - an iterable of param names
   """
-  temp_payload = struct.pac('<H', params)
+  paramNums = [paramMap[device_id][name] for name in params]
+  entries = [1 << num for num in paramNums]
+  tot = 0
+  for i in range(len(entries)):
+    tot = tot ^ entries[i]
+  temp_payload = struct.pack('<H', tot)
   payload = bytearray(temp_payload)
-  message = HibikeMessage(device_id, payload)
+  message = HibikeMessage(messageTypes["DeviceRead"], payload)
   return message
 
 def make_device_write(device_id, params_and_values):
