@@ -9,7 +9,7 @@ import json
 config_file = open(os.path.join(os.path.dirname(__file__), 'hibikeDevices.json'), 'r')
 devices = json.load(config_file)
 #devices = {device["id"]: device for device in devices}
-paramMap = {device["id"]: {param["name"]: param["number"] for param in device["params"]} for device in devices}
+paramMap = {device["id"]: {param["name"]: (param["number"], param["type"]) for param in device["params"]} for device in devices}
 
 """
 structure of devices
@@ -184,7 +184,7 @@ def make_subscription_request(device_id, params, delay):
       delay     - the delay in milliseconds
       struct.pack('%sf' % len(floatlist), *floatlist)
   """
-  paramNums = [paramMap[device_id][name] for name in params]
+  paramNums = [paramMap[device_id][name][0] for name in params]
   entries = [1 << num for num in paramNums]
   tot = 0
   for i in range(len(entries)):
@@ -217,7 +217,7 @@ def make_device_read(device_id, params):
       device_id - a device type id (not uid).
       params    - an iterable of param names
   """
-  paramNums = [paramMap[device_id][name] for name in params]
+  paramNums = [paramMap[device_id][name][0] for name in params]
   entries = [1 << num for num in paramNums]
   tot = 0
   for i in range(len(entries)):
@@ -237,7 +237,21 @@ def make_device_write(device_id, params_and_values):
       device_id         - a device type id (not uid).
       params_and_values - an iterable of param (name, value) tuples
   """
-  raise NotImplementedError()
+  params = [param[0] for param in params_and_values]
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  paramT = [paramMap[device_id][name][1] for name in params]
+  values = [params[1] for param in params_and_values]
+
+  tot = 0
+  for i in range(len(entries)):
+    tot = tot ^ entries[i]
+  typeString = '<H'
+  for t in paramT:
+    typeString += paramTypes[t]
+  temp_payload = struct.pack(typeString, tot, *values)
+  payload = bytearray(temp_payload)
+  message = HibikeMessage(messageTypes["DeviceWrite"], payload)
+  return message
 
 def make_device_data(device_id, params_and_values):
   """ Makes and returns SubscriptionRequest message.
