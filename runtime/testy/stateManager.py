@@ -15,6 +15,8 @@ class StateManager(object):
     self.input = inputQueue
     self.commandMapping = self.makeCommandMap()
     # map process names to pipes
+    self.hibikeMapping = self.makeHibikeMap()
+    self.hibikeResponseMapping = self.makeHibikeResponseMap()
     self.processMapping = {PROCESS_NAMES.RUNTIME: runtimePipe}
 
   def makeCommandMap(self):
@@ -23,24 +25,56 @@ class StateManager(object):
       SM_COMMANDS.ADD : self.addPipe,
       SM_COMMANDS.GET_VAL : self.getValue,
       SM_COMMANDS.SET_VAL : self.setValue,
-      SM_COMMANDS.HELLO : "print"
+      SM_COMMANDS.STUDENT_MAIN_OK : self.studentCodeTick,
+      SM_COMMANDS.CREATE_KEY : self.createKey
     }
     return commandMapping
 
+  def makeHibikeMap(self):
+    hibikeMapping = {
+      HIBIKE_COMMANDS.ENUMERATE: self.hibikeEnumerateAll,
+      HIBIKE_COMMANDS.SUBSCRIBE: self.hibikeSubscribeDevice,
+      HIBIKE_COMMANDS.READ: self.hibikeReadParams,
+      HIBIKE_COMMANDS.WRITE: self.hibikeWriteParams
+    }
+    return hibikeMapping
+
+  def makeHibikeResponseMap(self):
+    hibikeResponseMapping = {
+      HIBIKE_RESPONSE.DEVICE_SUBBED: self.hibikeResponseDeviceSubbed
+    }
+    return hibikeResponseMapping
+
   def initRobotState(self):
     self.state = {
-     "incrementer" : 5,
+     "incrementer" : 2,
      "int1" : 112314,
      "float1": 987.123,
      "bool1" : True,
      "dict1" : {"inner_dict1_int" : 555, "inner_dict_1_string": "hello"},
      "list1" : [70, "five", 14.3],
-     "string1" : "abcde"
+     "string1" : "abcde",
+     "runtime_meta" : {"studentCode_main_count" : 0},
+     "hibike" : {"device_subscribed" : 0}
     }
 
   def addPipe(self, processName, pipe):
     self.processMapping[processName] = pipe
     pipe.send(RUNTIME_CONFIG.PIPE_READY.value)
+
+  def createKey(self, keys):
+    currDict = self.state
+    for key in keys:
+      try:
+        if key not in currDict:
+          currDict[key] = {}
+        currDict = currDict[key]
+      except TypeError:
+        error = StudentAPIKeyError(
+          "key '{}' is defined, but does not contain a dictionary.".format(key))
+        self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+        return
+    self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(None)
 
   def getValue(self, keys):
     result = self.state
@@ -50,7 +84,8 @@ class StateManager(object):
         result = result[key[1]]
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(result)
     except:
-      self.badThingsQueue.put(BadThing(sys.exc_info(), self.dictErrorMessage(i, keys, result), event = BAD_EVENTS.STATE_MANAGER_KEY_ERROR, printStackTrace = False))
+      error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
+      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
 
   def setValue(self, value, keys):
     currDict = self.state
@@ -61,10 +96,31 @@ class StateManager(object):
         currDict = currDict[key[1]]
       if len(keys) > 1:
         i += 1
+      if keys[i] not in currDict:
+        raise Exception
       currDict[keys[i]] = value
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(value)
     except:
-      self.badThingsQueue.put(BadThing(sys.exc_info(), self.dictErrorMessage(i, keys, currDict), event = BAD_EVENTS.STATE_MANAGER_KEY_ERROR, printStackTrace = False))
+      error = StudentAPIKeyError(self.dictErrorMessage(i, keys, currDict))
+      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+
+  def studentCodeTick(self):
+    self.state["runtime_meta"]["studentCode_main_count"] += 1
+
+  def hibikeEnumerateAll(self, pipe):
+    pipe.send([HIBIKE_COMMANDS.ENUMERATE, []])
+
+  def hibikeSubscribeDevice(self, pipe, uid, delay, params):
+    pipe.send([HIBIKE_COMMANDS.SUBSCRIBE, [uid, delay, params]])
+
+  def hibikeWriteParams(self, pipe, uid, param_values):
+    pipe.send([HIBIKE_COMMANDS.WRITE, [uid, param_values]])
+
+  def hibikeReadParams(self, pipe, uid, params):
+    pipe.send([HIBIKE_COMMANDS.READ, [uid, params]])
+
+  def hibikeResponseDeviceSubbed(self, uid, delay, params):
+    self.state["hibike"]["device_subscribed"] += 1
 
   def dictErrorMessage(self, erroredIndex, keys, currDict):
     keyChain = ""
@@ -89,7 +145,6 @@ class StateManager(object):
 
     return errorMessage
 
-
   def start(self):
     # TODO: Make sure request is a list/tuple before attempting to access
     # And that there are the correct number of elements
@@ -100,11 +155,14 @@ class StateManager(object):
 
       if(len(request) != 2):
         self.badThingsQueue.put(BadThing(sys.exc_info(), "Wrong input size, need list of size 2", event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
-      elif(cmdType not in self.commandMapping):
-        self.badThingsQueue.put(BadThing(sys.exc_info(), "Unknown process name: %s" % (request,), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
-      else:
+      elif cmdType in self.commandMapping:
         command = self.commandMapping[cmdType]
-        if command == "print":
-          print("HELLO")
-        else:
-          command(*args)
+        command(*args)
+      elif cmdType in self.hibikeMapping:
+        command = self.hibikeMapping[cmdType]
+        command(self.processMapping[PROCESS_NAMES.HIBIKE], *args)
+      elif cmdType in self.hibikeResponseMapping:
+        command = self.hibikeResponseMapping[cmdType]
+        command(*args)
+      else:
+        self.badThingsQueue.put(BadThing(sys.exc_info(), "Unknown process name: %s" % (request,), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
