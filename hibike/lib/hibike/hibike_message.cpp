@@ -105,15 +105,12 @@ int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* ui
 int send_data_update(uint16_t params) { 
   message_t msg;
   msg.messageID = DEVICE_DATA;
-  msg.payload_length = 0;
+  msg.payload_length = 2;
 
-
-  int i=2;
   for (uint16_t count = 0; (params >> count) > 0; count++) {
       if (params & (1<<count)){
-        int bytes_written = device_data_update(count, &msg.payload[i], msg.payload_length);
+        int bytes_written = device_data_update(count, &msg.payload[msg.payload_length], msg.payload_length);
         if(bytes_written){
-          i += bytes_written;
           msg.payload_length += bytes_written;
         }
         else{
