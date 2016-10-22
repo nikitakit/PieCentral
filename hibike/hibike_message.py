@@ -3,53 +3,73 @@ from __future__ import print_function
 import serial
 import struct
 import pdb
+import os
+import json
+
+config_file = open(os.path.join(os.path.dirname(__file__), 'hibikeDevices.json'), 'r')
+devices = json.load(config_file)
+#devices = {device["id"]: device for device in devices}
+paramMap = {device["id"]: {param["name"]: (param["number"], param["type"]) for param in device["params"]} for device in devices}
+
+"""
+structure of devices
+{0: 
+    {"id": 0, "name": "LimitSwitch", "params": [
+                                               {"number": 0, "name": "switch0", "type": "bool", "read": True, "write": False}
+                                               ]
+    }
+}
+
+"""
+
+# Dictionary mapping param types to python struct format characters
+paramTypes = {
+  "bool" : "?",
+  "uint8_t": "B",
+  "int8_t": "b", 
+  "uint16_t": "H",
+  "int16_t": "h", 
+  "uint32_t": "I",
+  "int32_t": "i", 
+  "uint64_t": "Q",
+  "int64_t": "q", 
+  "float": "f",
+  "double": "d"
+}
+
 # Dictionary of message types: message id
 messageTypes = {
-  "SubscriptionRequest" :  0x00,
-  "SubscriptionResponse" : 0x01,
-  "DataUpdate" :           0x02,
-  "DeviceUpdate" :         0x03,
-  "DeviceStatus" :         0x04,
-  "DeviceResponse" :       0x05,
-  "Ping" :                 0x06,
-  "DescriptionRequest" :   0x08,
-  "DescriptionResponse" :  0x09,
-  "Error" :                0xff
+  "Ping" :                 0x10,
+  "SubscriptionRequest" :  0x11,
+  "SubscriptionResponse" : 0x12,
+  "DeviceRead" :           0x13,
+  "DeviceWrite" :          0x14,
+  "DeviceData" :           0x15,
+  "Error" :                0xFF
 }
 
 # Dictionary of device types: enumeration
 deviceTypes = {
-  "LimitSwitch" :         0x00,
-  "LineFollower" :        0x01,
-  "Potentiometer" :        0x02,
-  "Encoder" :              0x03,
+  "LimitSwitch"   :       0x00,
+  "LineFollower"  :       0x01,
+  "Potentiometer" :       0x02,
+  "Encoder"       :       0x03,
   "BatteryBuzzer" :       0x04,
-  "TeamFlag" :            0x05,
-  "Grizzly" :              0x06,
-  "ServoControl" :        0x07,
-  "LinearActuator" :      0x08
-}
-
-
-# Dictionary of message types: payload length
-messagePayloadLengths = {
-  messageTypes["SubscriptionRequest"] :  2,
-  messageTypes["SubscriptionResponse"] : 13,
-  # TODO: find a clean way to not hardcode this
-  messageTypes["DataUpdate"] :           1,
-  messageTypes["DeviceUpdate"] :         5,
-  messageTypes["DeviceStatus"] :         5,
-  messageTypes["DeviceResponse"] :       5,
-  messageTypes["Error"] :                1
+  "TeamFlag"      :       0x05,
+  "Grizzly"       :       0x06,
+  "ServoControl"  :       0x07,
+  "LinearActuator":       0x08,
+  "ColorSensor"   :       0x09,
+  "DistanceSensor":       0x10,
+  "MetalDetector" :       0x11,
+  "ExampleDevice" :       0xFFFF
 }
 
 # Dictionary of error names : error codes
 errorCodes = {
-  "InvalidMessageType" : 0xfb,
-  "MalformedMessage" :   0xfc,
-  "InvalidUID" :         0xfd,
-  "CheckumError" :       0xfe,
-  "GenericError" :       0xff
+  "UnexpectedDelimiter" : 0xFD,
+  "CheckumError"        : 0xFE,
+  "GenericError"        : 0xFF
 }
 
 class HibikeMessage:
@@ -89,11 +109,11 @@ def getDeviceType(uid):
 # return bits [71: 64] of the UID
 def getYear(uid):
   temp = uid >> 64
-  return int(temp & 0xff)
+  return int(temp & 0xFF)
 
 # return bits[63: 0] of the UID
 def getID(uid):
-  return uid & 0xffffffffffffffff
+  return uid & 0xFFFFFFFFFFFFFFFF
 
 
 # Given a message, computes the checksum
@@ -105,6 +125,34 @@ def checksum(data):
   for i in range(1, len(data)):
     chk ^= data[i]
   return chk
+
+
+  assert type(data) == bytearray, "data must be a bytearray"
+
+  if len(data) % 2 != 0:
+    data = data + bytearray([0])
+  pairs = []
+
+  for i in range(0, len(data), 2):
+    first = data[i]
+    first = first << 8
+    first |= data[i+1]
+    pairs.append(first)
+
+  chk = pairs[0]
+  for j in range(1, len(pairs)):
+    chk += pairs[j]
+    if chk >> 16 == 1:
+      chk += 1
+      chk &= 0xffff
+
+  chk = ~chk
+  chk &= 0xffff 
+  if chk == 0:
+    return 0xffff
+  return chk
+
+
 
 # Sends this message
 # Computes the checksum
@@ -119,33 +167,105 @@ def send(serial_conn, message):
 
 
 
-def make_sub_request(delay):
-  """ Makes and returns SubscriptionRequest message."""
-  temp_payload = struct.pack('<H', delay)
+def make_ping():
+  """ Makes and returns Ping message."""
+  payload = bytearray()
+  message = HibikeMessage(messageTypes["Ping"], payload)
+  return message
+
+def make_subscription_request(device_id, params, delay):
+  """ Makes and returns SubscriptionRequest message.
+
+      looks up config data about the specified 
+      device_id to properly construct the message.
+      
+      device_id - a device type id (not uid).
+      params    - an iterable of param names
+      delay     - the delay in milliseconds
+      struct.pack('%sf' % len(floatlist), *floatlist)
+  """
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  entries = [1 << num for num in paramNums]
+  tot = 0
+  for i in range(len(entries)):
+    tot = tot ^ entries[i]
+  temp_payload = struct.pack('<HH', tot, delay)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionRequest"], payload)
   return message
+  
 
-def make_sub_response(device_type, year, id, delay):
-  """ Makes and returns SubscriptionResponse message."""
-  temp_payload = struct.pack('<HBQH', device_type, year, id, delay)
+def make_subscription_response(device_id, params, delay, uid):
+  """ Makes and returns SubscriptionResponse message.
+
+      looks up config data about the specified 
+      device_id to properly construct the message.
+      
+      device_id - a device type id (not uid).
+      params    - an iterable of param names
+      delay     - the delay in milliseconds
+      uid       - the uid
+  """
+  raise NotImplementedError()
+
+def make_device_read(device_id, params):
+  """ Makes and returns DeviceRead message.
+
+      looks up config data about the specified 
+      device_id to properly construct the message.
+      
+      device_id - a device type id (not uid).
+      params    - an iterable of param names
+  """
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  entries = [1 << num for num in paramNums]
+  tot = 0
+  for i in range(len(entries)):
+    tot = tot ^ entries[i]
+  temp_payload = struct.pack('<H', tot)
   payload = bytearray(temp_payload)
-  message = HibikeMessage(messageTypes["SubscriptionResponse"], payload)
+  message = HibikeMessage(messageTypes["DeviceRead"], payload)
   return message
 
-def make_device_update(param, value):
-  """ Makes and returns DeviceUpdate message."""
-  temp_payload = struct.pack('<BI', param, value)
+def make_device_write(device_id, params_and_values):
+  """ Makes and returns DeviceWrite message.
+      If all the params cannot fit, it will fill as many as it can.
+
+      looks up config data about the specified 
+      device_id to properly construct the message.
+      
+      device_id         - a device type id (not uid).
+      params_and_values - an iterable of param (name, value) tuples
+  """
+  params_and_values = sorted(params_and_values, key=lambda x: paramMap[device_id][x[0]][0])
+  params = [param[0] for param in params_and_values]
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  paramT = [paramMap[device_id][name][1] for name in params]
+  values = [param[1] for param in params_and_values]
+  entries = [1 << num for num in paramNums]
+
+  tot = 0
+  for i in range(len(entries)):
+    tot = tot ^ entries[i]
+  typeString = '<H'
+  for t in paramT:
+    typeString += paramTypes[t]
+  temp_payload = struct.pack(typeString, tot, *values)
   payload = bytearray(temp_payload)
-  message = HibikeMessage(messageTypes["DeviceUpdate"], payload)
+  message = HibikeMessage(messageTypes["DeviceWrite"], payload)
   return message
 
-def make_device_status(param):
-  """ Makes and returns DeviceStatus message."""
-  temp_payload = struct.pack('<B', param)
-  payload = bytearray(temp_payload)
-  message = HibikeMessage(messageTypes["DeviceStatus"], payload)
-  return message
+def make_device_data(device_id, params_and_values):
+  """ Makes and returns SubscriptionRequest message.
+      If all the params cannot fit, it will fill as many as it can.
+
+      looks up config data about the specified 
+      device_id to properly construct the message.
+      
+      device_id         - a device type id (not uid).
+      params_and_values - an iterable of param (name, value) tuples
+  """
+  raise NotImplementedError()
 
 def make_error(error_code):
   """ Makes and returns Error message."""
@@ -153,19 +273,6 @@ def make_error(error_code):
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["Error"], payload)
   return message
-
-def make_ping():
-  """ Makes and returns Ping message."""
-  payload = bytearray()
-  message = HibikeMessage(messageTypes["Ping"], payload)
-  return message
-
-def make_description_request():
-  """ Makes and returns DescriptionRequest message."""
-  payload = bytearray()
-  message = HibikeMessage(messageTypes["DescriptionRequest"], payload)
-  return message
-
 
 # constructs a new object Message by continually reading from input
 # Uses dictionary to figure out length of data to know how many bytes to read
@@ -232,3 +339,20 @@ def cobs_decode(data):
     if block_size + 1 < 255 and index < len(data):
       output.append(0)
   return output
+
+
+class HibikeMessageException(Exception):
+	pass
+# Config file helper functions
+
+def device_name_to_id(name):
+	for device in devices:
+		if device["name"] == name:
+			return device["id"]
+	raise HibikeMessageException("Invalid device name: %s" % name)
+
+def device_id_to_name(id):
+	for device in devices:
+		if device["id"] == id:
+			return device["name"]
+	raise HibikeMessageException("Invalid device id: %d" % id)
