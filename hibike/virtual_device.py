@@ -26,21 +26,25 @@ port = args.port
 print(device, port)
 conn = serial.Serial(port, 115200)
 
-device_type = hm.deviceTypes[device]
+device_id = hm.deviceTypes[device]
 year = 1
 id = random.randint(0, 0xFFFFFFFFFFFFFFFF)
 delay = 0
 updateTime = 0
+uid = (device_id << 72) | (year << 64) | id
+params = 0
+
+# Here, the parameters and values to be sent in device datas are set for each device type
+if device_type in [hm.deviceTypes["LimitSwitch"]]: 
+        params_and_values = [(0, True), (1, True), (2, False), (3, False)]
+if device_type in [hm.deviceTypes["ServoControl"]]:
+        params_and_values = [(0, 2), (1, True), (2, 0), (3, True), (4, 5), (5, True), (6, 3), (7, False)]
 
 while (True):
         if (updateTime != 0 and delay != 0):
-                if((time.time() - updateTime) >= (delay * 0.001)): #If the time equal to the delay has elapsed since the previous data update, send a data update                                            
-                        if device_type in [hm.deviceTypes["LimitSwitch"]]:  # If the device type is a limit switch, send 4 arbitrary booleans
-                                statusVars = struct.pack("<????", True, False, False, True)
-                        if device_type in [hm.deviceTypes["ServoControl"]]: # If the device is a servo control, send an empty packet
-                                statusVars = struct.pack("<")
-
-                        dataUpdate = hm.HibikeMessage(hm.messageTypes["DataUpdate"], statusVars)
+                if((time.time() - updateTime) >= (delay * 0.001)): #If the time equal to the delay has elapsed since the previous device data, send a device data with the device id and the device's params and values                                            
+ 
+                        device_data = hm.make_device_data(device_id, params_and_values)
                         hm.send(conn, dataUpdate)
                         updateTime = time.time()
 
@@ -49,12 +53,12 @@ while (True):
         if not msg:
              time.sleep(.001)
              continue
-        if msg.getmessageID() in [hm.messageTypes["SubscriptionRequest"]]: #Update the delay and subscription time, and send a subscription response 
-             delay = struct.unpack("<H", msg.getPayload())[0]
-             hm.send(conn, hm.make_sub_response(device_type, year, id, delay))
+        if msg.getmessageID() in [hm.messageTypes["SubscriptionRequest"]]: #Update the delay, subscription time, and params, then send a subscription response 
+             params, delay = struct.unpack("<HH", msg.getPayload())
+             hm.send(conn, hm.make_sub_response(device_id, params, delay, uid))
              updateTime = time.time()
         if msg.getmessageID() in [hm.messageTypes["Ping"]]: # Send a subscription response 
-             hm.send(conn, hm.make_sub_response(device_type, year, id, delay))
+             hm.send(conn, hm.make_sub_response(device_id, params, delay, uid))
         if msg.getmessageID() in [hm.messageTypes["DeviceUpdate"]]: # Send a parameter and a value in a device response
              param, value = struct.unpack("<BI", msg.getPayload())
              responsePayload = struct.pack("<BI", param, value)
