@@ -15,6 +15,19 @@ class PROCESS_NAMES(Enum):
   STUDENT_CODE        = "studentProcess"
   STATE_MANAGER       = "stateProcess"
   RUNTIME             = "runtime"
+  HIBIKE              = "hibike"
+
+@unique
+class HIBIKE_COMMANDS(Enum):
+  ENUMERATE = "enumerate_all"
+  SUBSCRIBE = "subscribe_device"
+  WRITE     = "write_params"
+  READ      = "read_params"
+
+# TODO: Remove when Hibike is finished
+@unique
+class HIBIKE_RESPONSE(Enum):
+  DEVICE_SUBBED = "device_subscribed"
 
 @unique
 class SM_COMMANDS(Enum):
@@ -32,6 +45,7 @@ class SM_COMMANDS(Enum):
   HELLO               = ()
   GET_VAL             = ()
   SET_VAL             = ()
+  CREATE_KEY          = ()
 
 class RUNTIME_CONFIG(Enum):
   STUDENT_CODE_TIMEOUT = 3
