@@ -178,7 +178,19 @@ def make_subscription_response(device_id, params, delay, uid):
       delay     - the delay in milliseconds
       uid       - the uid
   """
-  raise NotImplementedError()
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  entries = [1 << num for num in paramNums]
+  tot = 0
+
+  for i in range(len(entries)):
+      tot = tot ^ entries[i]
+  
+  device_type, year, id_num = struct.unpack("<HBQ", uid)
+  temp_payload = struct.pack("<HHHBQ", tot, delay, device_type, year, id_num)
+  payload = bytearray(temp_payload)
+  message = HibikeMessage(messageTypes["SubscriptionResponse"], payload)
+
+  return message
 
 def make_device_read(device_id, params):
   """ Makes and returns DeviceRead message.
@@ -199,6 +211,23 @@ def make_device_read(device_id, params):
   message = HibikeMessage(messageTypes["DeviceRead"], payload)
   return message
 
+def decode_params(device_id, params):
+#     Decodes an inputted set of parameters that is in binary form   
+#     Returns a list of names symbolizing the parameters encoded 
+#
+#     device_id - a device type id (not uid)
+#     params    - the set of parameters in binary form
+  converted_params = []
+  for param_count in range(16):
+     if (1 & (params >> param_count) == 1):
+        converted_params.append(param_count)
+  named_params = []
+  for param in converted_params:
+     if param >= len(devices[device_id]["params"]):
+        break
+     named_params.append(devices[device_id]["params"][param]["name"])
+  return named_params
+  
 def make_device_write(device_id, params_and_values):
   """ Makes and returns DeviceWrite message.
       If all the params cannot fit, it will fill as many as it can.
@@ -228,7 +257,7 @@ def make_device_write(device_id, params_and_values):
   return message
 
 def make_device_data(device_id, params_and_values):
-  """ Makes and returns SubscriptionRequest message.
+  """ Makes and returns DeviceData message.
       If all the params cannot fit, it will fill as many as it can.
 
       looks up config data about the specified 
@@ -237,7 +266,26 @@ def make_device_data(device_id, params_and_values):
       device_id         - a device type id (not uid).
       params_and_values - an iterable of param (name, value) tuples
   """
-  raise NotImplementedError()
+  params = [param_tuple[0] for param_tuple in params_and_values]
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  entries = [1 << num for num in paramNums]
+
+  tot = 0
+  for i in range(len(entries)):
+    tot = tot ^ entries[i]
+  
+  paramT = [paramMap[device_id][name][1] for name in params]
+  values = [param_tuple[1] for param_tuple in params_and_values]
+
+  typeString = '<H'
+  for type in paramT:
+    typeString += paramTypes[type]
+	
+  temp_payload = struct.pack(typeString, tot, *values)
+  payload = bytearray(temp_payload)
+
+  message = HibikeMessage(messageTypes["DeviceData"], payload)
+  return message
 
 def make_error(error_code):
   """ Makes and returns Error message."""
