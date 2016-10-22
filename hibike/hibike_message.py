@@ -339,3 +339,20 @@ def cobs_decode(data):
     if block_size + 1 < 255 and index < len(data):
       output.append(0)
   return output
+
+
+class HibikeMessageException(Exception):
+	pass
+# Config file helper functions
+
+def device_name_to_id(name):
+	for device in devices:
+		if device["name"] == name:
+			return device["id"]
+	raise HibikeMessageException("Invalid device name: %s" % name)
+
+def device_id_to_name(id):
+	for device in devices:
+		if device["id"] == id:
+			return device["name"]
+	raise HibikeMessageException("Invalid device id: %d" % id)
