@@ -38,7 +38,7 @@ while (True):
                         if device_type in [hm.deviceTypes["LimitSwitch"]]:  # If the device type is a limit switch, send 4 arbitrary booleans
                                 statusVars = struct.pack("<????", True, False, False, True)
                         if device_type in [hm.deviceTypes["ServoControl"]]: # If the device is a servo control, send an empty packet
-                                statusVars = struct.pack("<", ())
+                                statusVars = struct.pack("<")
 
                         dataUpdate = hm.HibikeMessage(hm.messageTypes["DataUpdate"], statusVars)
                         hm.send(conn, dataUpdate)
