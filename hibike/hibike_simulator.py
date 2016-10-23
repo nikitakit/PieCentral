@@ -1,7 +1,7 @@
 import time, random
 import threading
 import multiprocessing
-from . import hibike_message as hm
+import hibike_message as hm
 import queue
 
 __all__ = ["hibike_process"]
