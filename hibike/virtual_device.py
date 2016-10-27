@@ -32,12 +32,13 @@ id = random.randint(0, 0xFFFFFFFFFFFFFFFF)
 delay = 0
 updateTime = 0
 uid = (device_id << 72) | (year << 64) | id
-params = 0
 
-# Here, the parameters and values to be sent in device datas are set for each device type
+# Here, the parameters and values to be sent in device datas are set for each device type and the parameter subscription status is set to false for all params
 if device_type in [hm.deviceTypes["LimitSwitch"]]: 
-        params_and_values = [(0, True), (1, True), (2, False), (3, False)]
+        param_subscriptions = [False, False, False, False]
+        params_and_values = [(hm.devices["switch0", True), ("switch1", True), ("switch2", False), ("switch3", False)]
 if device_type in [hm.deviceTypes["ServoControl"]]:
+        param_subscriptions = [False, False, False, False, False, False, False]
         params_and_values = [(0, 2), (1, True), (2, 0), (3, True), (4, 5), (5, True), (6, 3), (7, False)]
 
 while (True):
@@ -56,6 +57,14 @@ while (True):
         if msg.getmessageID() in [hm.messageTypes["SubscriptionRequest"]]: #Update the delay, subscription time, and params, then send a subscription response 
              params, delay = struct.unpack("<HH", msg.getPayload())
              hm.send(conn, hm.make_sub_response(device_id, params, delay, uid))
+             
+             subscribed_params = hm.decode_params(device_id, params)
+             for sub_status in param_subscriptions:
+                if sub_status in subscribed_params:
+                   sub_status = True
+                else
+                   sub_status = False
+                
              updateTime = time.time()
         if msg.getmessageID() in [hm.messageTypes["Ping"]]: # Send a subscription response 
              hm.send(conn, hm.make_sub_response(device_id, params, delay, uid))
