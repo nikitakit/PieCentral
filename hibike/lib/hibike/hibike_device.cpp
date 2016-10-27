@@ -46,9 +46,23 @@ void hibike_loop() {
           break;
 
         case DEVICE_WRITE:
-          params = hibikeBuff.payload[0] - 1;
-          value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
+          //loop over params
+          int offset = 2;
+          params = *((uint16_t*)&hibikeBuff.payload[0]);
+          for (uint16_t count = 0; (params >> count) > 0; count++) {
+            if (params & (1<<count)){
+              int status = device_write(count, &hibikeBuff.payload[offset], hibikeBuff.payload_length-offset);
+              if(status){
+                offset += status;}
+              else{
+                params = params & ~(1<<count);}
+            }
+          }
+
+          // params = hibikeBuff.payload[0] - 1;
+          // value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
           //write values
+          *((uint16_t*)&hibikeBuff.payload[0]) = params;
           send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
           break;
 
