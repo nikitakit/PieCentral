@@ -1,3 +1,3 @@
 pylint ./runtime/testy/*.py
 python3 cool_um_unittest.py
-python --version
+python3 --version
