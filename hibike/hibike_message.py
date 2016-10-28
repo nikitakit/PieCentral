@@ -1,6 +1,5 @@
 from __future__ import print_function
 # Rewritten because Python.__version__ != 3
-import serial
 import struct
 import pdb
 import os
