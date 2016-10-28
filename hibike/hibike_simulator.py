@@ -3,7 +3,7 @@ import threading
 import hibike_message as hm
 import queue
 
-fake_uids = [0 << 64, 7 << 64]
+fake_uids = [0 << 72, 7 << 72]
 
 
 uid_to_index = {}
@@ -67,13 +67,31 @@ class DeviceReadThread(threading.Thread):
         self.stateQueue = stateQueue
         self.fake_device_queue = fake_device_queue
         self.delay = 0
-        self.params = 0
+        self.params = []
+
+        self.fake_subscription_thread = FakeSubscriptionThread(fake_uids[self.ser], 0, [], self.fake_device_queue)
+        self.fake_subscription_thread.start()
 
     def run(self):
         while True:
-            instruction, args = fake_device_queue.get()
+            instruction, args = self.fake_device_queue.get()
+            res = None
             if instruction == "ping":
+                uid, delay, params = fake_uids[self.ser], self.delay, self.params
                 res = ["device_subscribed", [uid, delay, params]]
+            elif instruction == "subscribe":
+                uid, delay, params = tuple(args)
+                res = ["device_subscribed", [uid, delay, params]]
+
+                self.fake_subscription_thread.quit = True
+                self.fake_subscription_thread.join()
+                self.fake_subscription_thread = FakeSubscriptionThread(uid, delay, params, self.fake_device_queue)
+                self.fake_subscription_thread.start()
+            elif instruction == "device_values":
+                res = [instruction, args]
+
+            self.stateQueue.put(res)
+
             # message = hm.blocking_read(self.ser)
             # print(message.getPayload())
 
@@ -89,9 +107,32 @@ class DeviceReadThread(threading.Thread):
             # try to read a packet from serial port
             # if an exception is caught (device disconnect) send it to errorQueue
             # if a packet is read and the serial port has enumerated a uid, send the packet to stateQueue
-            pass
 
+class FakeSubscriptionThread(threading.Thread):
 
+    def __init__(self, uid, delay, params, fake_device_queue):
+        self.uid = uid
+        self.delay = delay
+        self.params = params
+        self.fake_device_queue = fake_device_queue
+        self.quit = False
+
+    def run(self):
+        if self.delay != 0:
+            while True:
+                if self.quit:
+                    return
+                time.sleep(self.delay / 1000.0)
+                param_types = [hm.paramMap[hm.uid_to_device_id(self.uid)][param]["type"] for param in self.params]
+                params_and_values = {}
+                for param, param_type in zip(self.params, param_types):
+                    if param_type in ("bool", ):
+                        params_and_values[param] = random.choice([True, False])
+                    elif param_type in ("uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t", "uint64_t", "int64_t"):
+                        params_and_values[param] = random.randrange(256)
+                    else:
+                        params_and_values[param] = random.random()
+                self.fake_device_queue.put("device_values", [self.uid, list(params_and_values.items())])
 
 
 #weight of each time interval for flipping.
