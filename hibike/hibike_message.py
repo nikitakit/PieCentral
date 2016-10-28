@@ -227,6 +227,23 @@ def make_device_read(device_id, params):
   message = HibikeMessage(messageTypes["DeviceRead"], payload)
   return message
 
+def decode_params(device_id, params):
+#     Decodes an inputted set of parameters that is in binary form   
+#     Returns a list of names symbolizing the parameters encoded 
+#
+#     device_id - a device type id (not uid)
+#     params    - the set of parameters in binary form
+  converted_params = []
+  for param_count in range(16):
+     if (1 & (params >> param_count) == 1):
+        converted_params.append(param_count)
+  named_params = []
+  for param in converted_params:
+     if param >= len(devices[device_id]["params"]):
+        break
+     named_params.append(devices[device_id]["params"][param]["name"])
+  return named_params
+  
 def make_device_write(device_id, params_and_values):
   """ Makes and returns DeviceWrite message.
       If all the params cannot fit, it will fill as many as it can.
