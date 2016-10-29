@@ -33,46 +33,49 @@ delay = 0
 updateTime = 0
 uid = (device_id << 72) | (year << 64) | id
 
-# Here, the parameters and values to be sent in device datas are set for each device type and the parameter subscription status is set to false for all params
+# Here, the parameters and values to be sent in device datas are set for each device type, the list of subscribed parameters is set to empty,
 if device_type in [hm.deviceTypes["LimitSwitch"]]: 
-        param_subscriptions = [False, False, False, False]
-        params_and_values = [(hm.devices["switch0", True), ("switch1", True), ("switch2", False), ("switch3", False)]
+        subscribed_params = []
+        params_and_values = [(hm.devices["switch0"], True), (hm.devices["switch1"], True), (hm.devices["switch2"], False), (hm.devices["switch3"], False)]
 if device_type in [hm.deviceTypes["ServoControl"]]:
-        param_subscriptions = [False, False, False, False, False, False, False]
-        params_and_values = [(0, 2), (1, True), (2, 0), (3, True), (4, 5), (5, True), (6, 3), (7, False)]
+        subscribed_params = []
+        params_and_values = [(hm.devices["servo0"], 2), (hm.devices["enable0"], True), (hm.devices["servo1"], 0), (hm.devices["enable1"], True), (hm.devices["servo2"], 5), (hm.devices["enable2"], True), (hm.devices["servo3"], 3), (hm.devices["enable3"], False)]
 
 while (True):
         if (updateTime != 0 and delay != 0):
-                if((time.time() - updateTime) >= (delay * 0.001)): #If the time equal to the delay has elapsed since the previous device data, send a device data with the device id and the device's params and values                                            
- 
-                        device_data = hm.make_device_data(device_id, params_and_values)
-                        hm.send(conn, dataUpdate)
+                if((time.time() - updateTime) >= (delay * 0.001)): #If the time equal to the delay has elapsed since the previous device data, send a device data with the device id and the device's subscribed params and values
+                        data = []
+                        for data_tuple in params_and_values:
+                                if data_tuple[0] in subscribed_params:
+                                        data.append[data_tuple]
+                        hm.send(conn, hm.make_device_data(device_id, data))
                         updateTime = time.time()
 
              
         msg = hm.read(conn)
         if not msg:
-             time.sleep(.001)
+             time.sleep(.0005)
              continue
         if msg.getmessageID() in [hm.messageTypes["SubscriptionRequest"]]: #Update the delay, subscription time, and params, then send a subscription response 
              params, delay = struct.unpack("<HH", msg.getPayload())
-             hm.send(conn, hm.make_sub_response(device_id, params, delay, uid))
              
              subscribed_params = hm.decode_params(device_id, params)
-             for sub_status in param_subscriptions:
-                if sub_status in subscribed_params:
-                   sub_status = True
-                else
-                   sub_status = False
-                
+             hm.send(conn, hm.make_subscription_response(device_id, subscribed_params, delay, uid))
              updateTime = time.time()
         if msg.getmessageID() in [hm.messageTypes["Ping"]]: # Send a subscription response 
-             hm.send(conn, hm.make_sub_response(device_id, params, delay, uid))
-        if msg.getmessageID() in [hm.messageTypes["DeviceUpdate"]]: # Send a parameter and a value in a device response
-             param, value = struct.unpack("<BI", msg.getPayload())
-             responsePayload = struct.pack("<BI", param, value)
-             deviceResponse = hm.HibikeMessage(hm.messageTypes["DeviceResponse"], responsePayload)
-             hm.send(conn, deviceResponse)
+             hm.send(conn, hm.make_subscription_response(device_id, subscribed_params, delay, uid))
+        if msg.getmessageID() in [hm.messageTypes["DeviceRead"]]: # Send a device data with the requested param and value tuples
+             params = struct.unpack("<H", msg.getPayload())
+             read_params = hm.decode_params(device_id, params)
+             read_data = []
+
+             for data_tuple in params_and_values:
+                if data_tuple[0] in read_params:
+                     if !hm.is_readable(device_id, data_tuple[0]):# Crash the program with an infinite loop if one of the values to be read is not readable
+                           while (True):
+                                   print("ERROR: ATTEMPTED TO READ UNREADABLE VALUE\n")
+                     read_data.append(data_tuple)
+             hm.send(conn, hm.make_device_data(device_id, read_data)
         if msg.getmessageID() in [hm.messageTypes["DeviceStatus"]]:  # Send a parameter and a value in a device response  
              param = struct.unpack("<B", msg.getPayload())[0]
              value = 0
