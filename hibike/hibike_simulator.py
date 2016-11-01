@@ -1,8 +1,10 @@
 import time, random
 import threading
 import multiprocessing
-import hibike_message as hm
+from . import hibike_message as hm
 import queue
+
+__all__ = ["hibike_process"]
 
 fake_uids = [0 << 72, 7 << 72]
 
@@ -15,14 +17,25 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
         pass
     ports = ['0', '1']
     serials = [int(port) for port in ports]
+
+    # each device has it's own write thread, with it's own instruction queue
     instruction_queues = [queue.Queue() for _ in ports]
+
+    # since this is a simulation and there are no real devices, this is how the write threads interface with the read threads
     fake_device_queues = [queue.Queue() for _ in ports]
+
+    # each device has one write thread that receives instructions from the main thread and writes to devices
     write_threads = [DeviceWriteThread(ser, iq, fake_device_queue) for ser, iq, fake_device_queue in zip(serials, instruction_queues, fake_device_queues)]
+    
+    # each device has a read thread that reads from devices and writes directly to stateManager
     read_threads = [DeviceReadThread(ser, None, stateQueue, fake_device_queue) for ser, fake_device_queue in zip(serials, fake_device_queues)]
+    
     for read_thread in read_threads:
         read_thread.start()
     for write_thread in write_threads:
         write_thread.start()
+
+    # the main thread reads instructions from statemanager and forwards them to the appropriate device write threads
     while True:
         instruction, args = pipeFromChild.recv()
         if instruction == "enumerate_all":
