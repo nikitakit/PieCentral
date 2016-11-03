@@ -255,6 +255,30 @@ def make_device_write(device_id, params_and_values):
   message = HibikeMessage(messageTypes["DeviceWrite"], payload)
   return message
 
+def decode_device_write(device_id, message):
+  messageID = message.getmessageID()
+  payload = message.getPayload()
+  messageT = "DeviceWrite"
+  paramB = bin(payload[0])
+  paramNames = decode_params(device_id, paramB)
+  paramT = [paramMap[device_id][name][1] for name in paramNames]
+  typeString = '<H'
+  for t in paramT:
+    typeString += paramTypes[t]
+  tot_values = struct.unpack(typeString, payload)
+  params_and_values = []
+  for i in range(len(paramNames)):
+    param_and_values.append((paramNames[i], tot_values[i+1]))
+  return params_and_values
+
+
+
+
+
+
+
+
+
 def make_device_data(device_id, params_and_values):
   """ Makes and returns DeviceData message.
       If all the params cannot fit, it will fill as many as it can.
