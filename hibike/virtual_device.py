@@ -35,16 +35,16 @@ uid = (device_id << 72) | (year << 64) | id
 
 # Here, the parameters and values to be sent in device datas are set for each device type, the list of subscribed parameters is set to empty,
 if device_type in [hm.deviceTypes["LimitSwitch"]]: 
-        subscribed_params = []
+        subscribed_params = 0
         params_and_values = [(hm.devices["switch0"], True), (hm.devices["switch1"], True), (hm.devices["switch2"], False), (hm.devices["switch3"], False)]
 if device_type in [hm.deviceTypes["ServoControl"]]:
-        subscribed_params = []
+        subscribed_params = 0
         params_and_values = [(hm.devices["servo0"], 2), (hm.devices["enable0"], True), (hm.devices["servo1"], 0), (hm.devices["enable1"], True), (hm.devices["servo2"], 5), (hm.devices["enable2"], True), (hm.devices["servo3"], 3), (hm.devices["enable3"], False)]
 
 while (True):
         if (updateTime != 0 and delay != 0):
                 if((time.time() - updateTime) >= (delay * 0.001)): #If the time equal to the delay has elapsed since the previous device data, send a device data with the device id and the device's subscribed params and values
-                        data = []
+                        data = 0
                         for data_tuple in params_and_values:
                                 if data_tuple[0] in subscribed_params:
                                         data.append[data_tuple]
@@ -67,19 +67,35 @@ while (True):
         if msg.getmessageID() in [hm.messageTypes["DeviceRead"]]: # Send a device data with the requested param and value tuples
              params = struct.unpack("<H", msg.getPayload())
              read_params = hm.decode_params(device_id, params)
-             read_data = []
+             read_data = 0
 
              for data_tuple in params_and_values:
                 if data_tuple[0] in read_params:
-                     if !hm.is_readable(device_id, data_tuple[0]):# Crash the program with an infinite loop if one of the values to be read is not readable
-                           while (True):
-                                   print("ERROR: ATTEMPTED TO READ UNREADABLE VALUE\n")
+                     if hm.devices[device_id]["params"][data_tuple[0]]["read"] != True:# Raise a syntax error if one of the values to be read is not readable
+                             raise SyntaxError("Attempted to read an unreadable value")
                      read_data.append(data_tuple)
              hm.send(conn, hm.make_device_data(device_id, read_data)
-        if msg.getmessageID() in [hm.messageTypes["DeviceStatus"]]:  # Send a parameter and a value in a device response  
-             param = struct.unpack("<B", msg.getPayload())[0]
-             value = 0
-             responsePayload = struct.pack("<BI", param, value)
-             deviceResponse = hm.HibikeMessage(hm.messageTypes["DeviceResponse"], responsePayload)
-             hm.send(conn, deviceResponse)
+        if msg.getmessageID() in [hm.messageTypes["DeviceWrite"]]: # Write to requested parameters and return the values of the parameters written to using a device data
+                params = struct.unpack("<H", msg.getPayload()[0:2])
+                write_params = hm.decode_params(device_id, params)
+                
+                value_types = [hm.paramMap[device_id][name][1] for name in write_params]
+                type_string = "<"
+                for val_type in value_types:
+                     type_string += hm.paramTypes[val_type]
+                values = struct.unpack(type_string, msg.getPayload()[2:])
+                     write_tuples = [(write_params[index], values[index]) for index in range(len(write_params))]
 
+                for data_tuple in params_and_values:
+                     if data_tuple[0] in write_params:
+                          if !hm.devices[device_id]["params"][data_tuple[0]]["write"] =! True: # Raise a syntax error if the value that the message attempted to write to is not writable
+                                raise SyntaxError("Attempted to write to an unwritable value")
+                          data_tuple = write_tuples[write_params.index(data_tuple[0])]
+
+                # Send the written data, make sure you only send data for readable parameters
+                for index in range(len(write_params))
+                        while (hm.devices[device_id]["params"][write_tuples[index][0]]["read"] != True)
+                             del write_tuples[index]
+                hm.send(conn, hm.make_device_data(device_id, write_tuples)
+                
+                

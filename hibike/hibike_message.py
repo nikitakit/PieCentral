@@ -291,15 +291,6 @@ def make_error(error_code):
   message = HibikeMessage(messageTypes["Error"], payload)
   return message
 
-def is_readable(device_id, param)
-# tests if the inputted parameter can be read
-# Returns:
-     # True if the parameter is readable
-     # False otherwise
-# device_id      - a device type id (not uid)
-# param          - the parameter to be tested
-   raise NotImplementedError()
-
 # constructs a new object Message by continually reading from input
 # Uses dictionary to figure out length of data to know how many bytes to read
 # Returns:
