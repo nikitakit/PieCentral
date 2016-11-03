@@ -1,6 +1,5 @@
 from __future__ import print_function
 # Rewritten because Python.__version__ != 3
-import serial
 import struct
 import pdb
 import os
@@ -227,6 +226,23 @@ def make_device_read(device_id, params):
   message = HibikeMessage(messageTypes["DeviceRead"], payload)
   return message
 
+def decode_params(device_id, params):
+#     Decodes an inputted set of parameters that is in binary form   
+#     Returns a list of names symbolizing the parameters encoded 
+#
+#     device_id - a device type id (not uid)
+#     params    - the set of parameters in binary form
+  converted_params = []
+  for param_count in range(16):
+     if (1 & (params >> param_count) == 1):
+        converted_params.append(param_count)
+  named_params = []
+  for param in converted_params:
+     if param >= len(devices[device_id]["params"]):
+        break
+     named_params.append(devices[device_id]["params"][param]["name"])
+  return named_params
+  
 def make_device_write(device_id, params_and_values):
   """ Makes and returns DeviceWrite message.
       If all the params cannot fit, it will fill as many as it can.
@@ -279,6 +295,40 @@ def make_error(error_code):
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["Error"], payload)
   return message
+
+
+def parse_bytes(bytes):
+  if len(bytes) < 2:
+    return None
+  cobs_frame, message_size = struct.unpack('<BB', bytes[:2])
+  if cobs_frame != 0 or len(bytes) < message_size + 2:
+    return None
+  message = cobs_decode(bytes[2:message_size+2])
+
+  if len(message) < 2:
+    return None
+  messageID, payloadLength = struct.unpack('<BB', message[:2])
+  if len(message) < 2 + payloadLength + 1:
+    return None
+  payload = message[2:2 + payloadLength]
+  chk = struct.unpack('<B', message[2+payloadLength:2+payloadLength+1])[0]
+  if chk != checksum(message[:-1]):
+    #print(chk, checksum(message[:-1]), list(message))
+    return None
+  return HibikeMessage(messageID, payload)
+
+
+
+def blocking_read(serial_conn):
+  buffer = bytearray()
+  while not parse_bytes(buffer):
+    curr = serial_conn.read()
+    if struct.unpack('<B', curr)[0] == 0:
+      buffer = bytearray(curr)
+    else:
+      buffer.extend(curr)
+  return parse_bytes(buffer)
+
 
 # constructs a new object Message by continually reading from input
 # Uses dictionary to figure out length of data to know how many bytes to read
@@ -348,17 +398,27 @@ def cobs_decode(data):
 
 
 class HibikeMessageException(Exception):
-	pass
+  pass
 # Config file helper functions
 
 def device_name_to_id(name):
-	for device in devices:
-		if device["name"] == name:
-			return device["id"]
-	raise HibikeMessageException("Invalid device name: %s" % name)
+  for device in devices:
+    if device["name"] == name:
+      return device["id"]
+  raise HibikeMessageException("Invalid device name: %s" % name)
 
 def device_id_to_name(id):
-	for device in devices:
-		if device["id"] == id:
-			return device["name"]
-	raise HibikeMessageException("Invalid device id: %d" % id)
+  for device in devices:
+    if device["id"] == id:
+      return device["name"]
+  raise HibikeMessageException("Invalid device id: %d" % id)
+
+def uid_to_device_name(uid):
+  return device_id_to_name(uid_to_device_id(uid))
+
+def uid_to_device_id(uid):
+  return uid >> 72
+
+
+def all_params_for_device_id(id):
+  return list(paramMap[id].keys())
