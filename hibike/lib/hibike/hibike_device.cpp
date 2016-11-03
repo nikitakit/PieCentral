@@ -31,6 +31,7 @@ void hibike_loop() {
     if (read_message(&hibikeBuff) == -1) {
       toggleLED();
     } else {
+      int offset;
       switch (hibikeBuff.messageID) {
 
         case SUBSCRIPTION_REQUEST:
@@ -47,7 +48,7 @@ void hibike_loop() {
 
         case DEVICE_WRITE:
           //loop over params
-          int offset = 2;
+          offset = 2;
           params = *((uint16_t*)&hibikeBuff.payload[0]);
           for (uint16_t count = 0; (params >> count) > 0; count++) {
             if (params & (1<<count)){
