@@ -255,6 +255,12 @@ def make_device_write(device_id, params_and_values):
   message = HibikeMessage(messageTypes["DeviceWrite"], payload)
   return message
 
+def decode_device_write(message):
+  messageID = message.getmessageID()
+  payload = message.getPayload()
+  messageT = "DeviceWrite"
+
+
 def make_device_data(device_id, params_and_values):
   """ Makes and returns SubscriptionRequest message.
       If all the params cannot fit, it will fill as many as it can.
