@@ -22,16 +22,12 @@ Servo
 
 MetalDetector
 
-- callibrate: bool write only
+- calibrate: bool write only
 - reading: int read only
 
 
 
 ## StateManager -> Hibike
-
-`["ready"]`
-
-- tells hibike it's ready for instructions
 
 `["enumerate_all"]`
 
