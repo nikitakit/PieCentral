@@ -43,6 +43,10 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
             uid = args[0]
             if uid in uid_to_index:
                 instruction_queues[uid_to_index[uid]].put(("subscribe", args))
+        elif instruction == "write_params":
+            uid = args[0]
+            if uid in uid_to_index:
+                instruction_queues[uid_to_index[uid]].put(("write", args))            
 
 
 class DeviceWriteThread(threading.Thread):
@@ -108,6 +112,23 @@ class DeviceReadThread(threading.Thread):
 #############
 
 if __name__ == "__main__":
+
+    # helper functions so we can spawn threads that try to
+    def set_interval_sequence(functions, sec):
+        def func_wrapper():
+            set_interval_sequence(functions[1:] + functions[:1], sec)
+            functions[0]()
+        t = threading.Timer(sec, func_wrapper)
+        t.start()
+        return t
+
+    def make_send_write(pipeToChild, uid, params_and_values):
+        def helper():
+            pipeToChild.send(["write_params", [uid, params_and_values]])
+        return helper
+
+
+
     pipeToChild, pipeFromChild = multiprocessing.Pipe()
     badThingsQueue = multiprocessing.Queue()
     stateQueue = multiprocessing.Queue()
@@ -123,6 +144,24 @@ if __name__ == "__main__":
             uid = args[0]
             if uid not in uids:
                 uids.add(uid)
+                if hm.devices[hm.uid_to_device_id(uid)]["name"] == "TeamFlag":
+                    set_interval_sequence([
+                        make_send_write(pipeToChild, uid, [("led1", 1), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 1), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 1), ("led4", 0), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 1), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 1)]), 
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 1), ("yellow", 0)])
+                        ], 0.1)
+                elif hm.devices[hm.uid_to_device_id(uid)]["name"] == "YogiBear":
+                    set_interval_sequence([
+                        make_send_write(pipeToChild, uid, [("duty", 0),   ("forward", True)]),
+                        make_send_write(pipeToChild, uid, [("duty", 50),  ("forward", True)]),
+                        make_send_write(pipeToChild, uid, [("duty", 100), ("forward", True)]),
+                        make_send_write(pipeToChild, uid, [("duty", 0),   ("forward", False)]),
+                        make_send_write(pipeToChild, uid, [("duty", 50),  ("forward", False)]),
+                        make_send_write(pipeToChild, uid, [("duty", 100), ("forward", False)])
+                        ], 1)
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
             print("%10.2f, %s" % (time.time(), str(args)))
