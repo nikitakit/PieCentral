@@ -42,10 +42,10 @@
                                                           {"number": 0  , "name": "mode"       , "type": "bool"    , "read": true , "write": true  },
                                                           {"number": 1  , "name": "blue"       , "type": "bool"    , "read": true , "write": true  },
                                                           {"number": 2  , "name": "yellow"     , "type": "bool"    , "read": true , "write": true  },
-                                                          {"number": 3  , "name": "s1"         , "type": "bool"    , "read": true , "write": true  },
-                                                          {"number": 4  , "name": "s2"         , "type": "bool"    , "read": true , "write": true  },
-                                                          {"number": 5  , "name": "s3"         , "type": "bool"    , "read": true , "write": true  },
-                                                          {"number": 6  , "name": "s3"         , "type": "bool"    , "read": true , "write": true  }
+                                                          {"number": 3  , "name": "led1"         , "type": "bool"    , "read": true , "write": true  },
+                                                          {"number": 4  , "name": "led2"         , "type": "bool"    , "read": true , "write": true  },
+                                                          {"number": 5  , "name": "led3"         , "type": "bool"    , "read": true , "write": true  },
+                                                          {"number": 6  , "name": "led4"         , "type": "bool"    , "read": true , "write": true  }
                                                      ]
     },
 
