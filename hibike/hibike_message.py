@@ -47,23 +47,6 @@ messageTypes = {
   "Error" :                0xFF
 }
 
-# Dictionary of device types: enumeration
-deviceTypes = {
-  "LimitSwitch"   :       0x00,
-  "LineFollower"  :       0x01,
-  "Potentiometer" :       0x02,
-  "Encoder"       :       0x03,
-  "BatteryBuzzer" :       0x04,
-  "TeamFlag"      :       0x05,
-  "Grizzly"       :       0x06,
-  "ServoControl"  :       0x07,
-  "LinearActuator":       0x08,
-  "ColorSensor"   :       0x09,
-  "DistanceSensor":       0x10,
-  "MetalDetector" :       0x11,
-  "ExampleDevice" :       0xFFFF
-}
-
 # Dictionary of error names : error codes
 errorCodes = {
   "UnexpectedDelimiter" : 0xFD,
@@ -227,11 +210,12 @@ def make_device_read(device_id, params):
   return message
 
 def decode_params(device_id, params):
-#     Decodes an inputted set of parameters that is in binary form   
-#     Returns a list of names symbolizing the parameters encoded 
-#
-#     device_id - a device type id (not uid)
-#     params    - the set of parameters in binary form
+  """ Decodes an inputted set of parameters that is in binary form   
+      Returns a list of names symbolizing the parameters encoded 
+
+      device_id - a device type id (not uid)
+      params    - the set of parameters in binary form
+  """
   converted_params = []
   for param_count in range(16):
      if (1 & (params >> param_count) == 1):
