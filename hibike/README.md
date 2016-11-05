@@ -110,7 +110,7 @@ Each Smart Device will be assigned an 88-bit UID with the following data.
 
 - Year
   - 8-bit ID corresponding to the competition year that the Smart Device was manufactured for. 
-  - The 2015-2016 season will correspond to 0x00
+  - The 2016-2017 season will correspond to 0x01
 
 - ID
     - Randomly generated 64-bit number that will uniquely identify each Smart Device within a specific device type and year.
@@ -125,6 +125,7 @@ Each Smart Device will be assigned an 88-bit UID with the following data.
 - Some paramaters are read only, some are write only, and some support both.
 - A config file will describe the paramaters for each Device Type (name, type, permissions).
 - Some packets encode sets of parameters in the form of bitmaps.
+- Some packets will contain values for the parameters encoded in their bitmap. To save space, only data for the params specified will be present.
 
 
 
@@ -185,7 +186,7 @@ Device Type Enumeration:
 |         |                | 4            | s2         | bool       | yes   | yes    |
 |         |                | 5            | s3         | bool       | yes   | yes    |
 |         |                | 6            | s3         | bool       | yes   | yes    |
-|  0x06   | Grizzly        |              |            |            |       |        |
+|  0x06   | YogiBear       |              |            |            |       |        |
 |  0x07   | ServoControl   | 0            | servo0     | uint8_t    | yes   | yes    |
 |         |                | 1            | enable0    | bool       | yes   | yes    |
 |         |                | 2            | servo1     | uint8_t    | yes   | yes    |
@@ -217,17 +218,14 @@ Device Type Enumeration:
 
 
      
-Note: These assignments are totally random as of now. We need to figure
+Note: These assignments are totally arbitrary as of now. We need to figure
       out exactly what devices we are supporting.
-Note: As of now, Grizzlies are not supported by Hibike (pyGrizzly should 
-      be used instead) But they should be in the near future, to preserve 
-      the idea of treating every peripheral as a SmartDevice.
 
 Error ID Enumeration:
 
 | Status  |    Meaning                    |
 |---------|-------------------------------|
-|   0xFD  |  Unexpected Packet Delimiter  |
+|   0xFD  | Unexpected Packet Delimiter   |
 |   0xFE  | Checksum Error                |
 |   0xFF  | Generic Error                 |
 
