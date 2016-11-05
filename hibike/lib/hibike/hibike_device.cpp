@@ -57,7 +57,7 @@ void hibike_loop() {
                 offset += status;}
               else{
                 params = params & ~(1<<count);}
-            }
+              }
           }
 
           // params = hibikeBuff.payload[0] - 1;

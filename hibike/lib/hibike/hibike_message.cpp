@@ -106,7 +106,6 @@ int send_data_update(uint16_t params) {
   message_t msg;
   msg.messageID = DEVICE_DATA;
   msg.payload_length = 2;
-
   for (uint16_t count = 0; (params >> count) > 0; count++) {
       if (params & (1<<count)){
         int bytes_written = device_data_update((uint8_t) count, &msg.payload[msg.payload_length], (size_t) msg.payload_length);
@@ -114,7 +113,7 @@ int send_data_update(uint16_t params) {
           msg.payload_length += bytes_written;
         }
         else{
-          params = params & ~(1<<count);
+          params &= ~(1<<count);
         }
       }
   }
