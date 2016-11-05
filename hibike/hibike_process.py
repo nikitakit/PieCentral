@@ -65,6 +65,10 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
             uid = args[0]
             if uid in uid_to_index:
                 instruction_queues[uid_to_index[uid]].put(("subscribe", args))
+        elif instruction == "write_params":
+            uid = args[0]
+            if uid in uid_to_index:
+                instruction_queues[uid_to_index[uid]].put(("write", args))            
 
 
 class RealDeviceWriteThread(threading.Thread):
@@ -86,6 +90,10 @@ class RealDeviceWriteThread(threading.Thread):
                 delay = args[1]
                 params = args[2]
                 hm.send(self.ser, hm.make_subscription_request(hm.uid_to_device_id(uid), params, delay))
+            elif instruction == "write":
+                uid = args[0]
+                params_and_values = args[1]
+                hm.send(self.ser, hm.make_device_write(hm.uid_to_device_id(uid), params_and_values))
             # self.fake_device_queue.put(instruction)
 
 class FakeDeviceWriteThread(threading.Thread):
@@ -223,6 +231,30 @@ class FakeSubscriptionThread(threading.Thread):
 #############
 
 if __name__ == "__main__":
+
+    def set_interval(func, sec):
+        def func_wrapper():
+            set_interval(func, sec)
+            func()
+        t = threading.Timer(sec, func_wrapper)
+        t.start()
+        return t
+
+    def set_sequence_interval(functions, sec):
+        def func_wrapper():
+            set_sequence_interval(functions[1:] + functions[:1], sec)
+            functions[0]()
+        t = threading.Timer(sec, func_wrapper)
+        t.start()
+        return t
+
+    def make_send_write(pipeToChild, uid, params_and_values):
+        def helper():
+            pipeToChild.send(["write_params", [uid, params_and_values]])
+        return helper
+
+
+
     pipeToChild, pipeFromChild = multiprocessing.Pipe()
     badThingsQueue = multiprocessing.Queue()
     stateQueue = multiprocessing.Queue()
@@ -238,6 +270,15 @@ if __name__ == "__main__":
             uid = args[0]
             if uid not in uids:
                 uids.add(uid)
+                if hm.devices[hm.uid_to_device_id(uid)]["name"] == "TeamFlag":
+                    set_sequence_interval([
+                        make_send_write(pipeToChild, uid, [("led1", 1), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 1), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 1), ("led4", 0), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 1), ("blue", 0), ("yellow", 0)]),
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 1)]), 
+                        make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 1), ("yellow", 0)])
+                        ], 0.1)
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
             print("%10.2f, %s" % (time.time(), str(args)))
