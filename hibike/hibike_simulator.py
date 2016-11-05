@@ -13,8 +13,6 @@ uid_to_index = {}
 
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
-    while pipeFromChild.recv()[0] != "ready":
-        pass
     ports = ['0', '1']
     serials = [int(port) for port in ports]
 
