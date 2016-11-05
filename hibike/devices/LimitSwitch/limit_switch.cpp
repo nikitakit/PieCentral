@@ -30,7 +30,7 @@ uint32_t device_status(uint8_t param) {
   return ~((uint32_t) 0);
 }
 
-uint32_t device_write(uint8_t param, uint8_t* data,size_t len){
+uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
   return 0;
 }
 
