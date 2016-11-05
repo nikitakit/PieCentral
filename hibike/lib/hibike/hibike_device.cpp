@@ -5,7 +5,7 @@ char *DESCRIPTION = DESCRIPTOR;
 message_t hibikeBuff;
 uint64_t prevTime, currTime, heartbeatTime;
 // uint8_t param;
-uint16_t params;
+uint16_t params, old_params;
 uint32_t value;
 uint16_t subDelay;
 led_state heartbeat_state;
@@ -48,6 +48,7 @@ void hibike_loop() {
 
         case DEVICE_WRITE:
           //loop over params
+          old_params = params;
           offset = 2;
           params = *((uint16_t*)&hibikeBuff.payload[0]);
           for (uint16_t count = 0; (params >> count) > 0; count++) {
@@ -57,7 +58,7 @@ void hibike_loop() {
                 offset += status;}
               else{
                 params = params & ~(1<<count);}
-            }
+              }
           }
 
           // params = hibikeBuff.payload[0] - 1;
@@ -65,6 +66,7 @@ void hibike_loop() {
           //write values
           *((uint16_t*)&hibikeBuff.payload[0]) = params;
           send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
+          params = old_params;
           break;
 
         case DEVICE_READ:

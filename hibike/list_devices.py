@@ -30,13 +30,15 @@ class HibikeDevice:
         res = ""
         res += hm.uid_to_device_name(self.uid)
         res += ":\n"
-        res += "    %s" % self.serial_port.port
-        res += "    %s" % self.data
+        res += "    %d\n" % self.uid
+        res += "    %s\n" % self.serial_port.port
+        res += "    %s\n" % self.data
         return res
     def __repr__(self):
         res = ""
         res += hm.uid_to_device_name(self.uid)
         res += ":\n"
+        res += "    %d" % self.uid
         res += "    %s\n" % self.serial_port.port
         res += "    %s\n" % self.data
         return res
