@@ -232,17 +232,10 @@ class FakeSubscriptionThread(threading.Thread):
 
 if __name__ == "__main__":
 
-    def set_interval(func, sec):
+    # helper functions so we can spawn threads that try to
+    def set_interval_sequence(functions, sec):
         def func_wrapper():
-            set_interval(func, sec)
-            func()
-        t = threading.Timer(sec, func_wrapper)
-        t.start()
-        return t
-
-    def set_sequence_interval(functions, sec):
-        def func_wrapper():
-            set_sequence_interval(functions[1:] + functions[:1], sec)
+            set_interval_sequence(functions[1:] + functions[:1], sec)
             functions[0]()
         t = threading.Timer(sec, func_wrapper)
         t.start()
@@ -271,7 +264,7 @@ if __name__ == "__main__":
             if uid not in uids:
                 uids.add(uid)
                 if hm.devices[hm.uid_to_device_id(uid)]["name"] == "TeamFlag":
-                    set_sequence_interval([
+                    set_interval_sequence([
                         make_send_write(pipeToChild, uid, [("led1", 1), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 0)]),
                         make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 1), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 0)]),
                         make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 1), ("led4", 0), ("blue", 0), ("yellow", 0)]),
@@ -279,6 +272,15 @@ if __name__ == "__main__":
                         make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 0), ("yellow", 1)]), 
                         make_send_write(pipeToChild, uid, [("led1", 0), ("led2", 0), ("led3", 0), ("led4", 0), ("blue", 1), ("yellow", 0)])
                         ], 0.1)
+                elif hm.devices[hm.uid_to_device_id(uid)]["name"] == "YogiBear":
+                    set_interval_sequence([
+                        make_send_write(pipeToChild, uid, [("duty", 0),   ("forward", True)]),
+                        make_send_write(pipeToChild, uid, [("duty", 50),  ("forward", True)]),
+                        make_send_write(pipeToChild, uid, [("duty", 100), ("forward", True)]),
+                        make_send_write(pipeToChild, uid, [("duty", 0),   ("forward", False)]),
+                        make_send_write(pipeToChild, uid, [("duty", 50),  ("forward", False)]),
+                        make_send_write(pipeToChild, uid, [("duty", 100), ("forward", False)])
+                        ], 1)
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
             print("%10.2f, %s" % (time.time(), str(args)))
