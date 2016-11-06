@@ -11,42 +11,20 @@ fake_uids = [0 << 72, 7 << 72]
 
 
 uid_to_index = {}
-#port_to_index = {}
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
-    while pipeFromChild.recv()[0] != "ready":
-        pass
-    ports = []#['0', '1']
-    serials = [int(port) for port in ports]
 
-
-
+    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
+    serials = [serial.Serial(port, 115200) for port in ports]
 
     # each device has it's own write thread, with it's own instruction queue
     instruction_queues = [queue.Queue() for _ in ports]
 
+    # these threads receive instructions from the main thread and write to devices
+    write_threads = [DeviceWriteThread(ser, iq) for ser, iq in zip(serials, instruction_queues)]
 
-    # since this is a simulation and there are no real devices, this is how the write threads interface with the read threads
-    fake_device_queues = [queue.Queue() for _ in ports]
-
-    # each device has one write thread that receives instructions from the main thread and writes to devices
-    write_threads = [FakeDeviceWriteThread(ser, iq, fake_device_queue) for ser, iq, fake_device_queue in zip(serials, instruction_queues, fake_device_queues)]
-    
-    # each device has a read thread that reads from devices and writes directly to stateManager
-    read_threads = [FakeDeviceReadThread(ser, None, stateQueue, fake_device_queue) for ser, fake_device_queue in zip(serials, fake_device_queues)]
-    
-
-    real_ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
-    real_serials = [serial.Serial(port, 115200) for port in real_ports]
-    real_instruction_queues = [queue.Queue() for _ in real_ports]
-    real_write_threads = [RealDeviceWriteThread(ser, iq) for ser, iq in zip(real_serials, real_instruction_queues)]
-    real_read_threads = [RealDeviceReadThread(index + len(ports), ser, None, stateQueue) for index, ser in enumerate(real_serials)]
-
-    ports += real_ports
-    serials += real_serials
-    instruction_queues += real_instruction_queues
-    write_threads += real_write_threads
-    read_threads += real_read_threads
+    # these threads receive packets from devices and write to statequeue
+    read_threads = [DeviceReadThread(index, ser, iq, None, stateQueue) for index, (ser, iq) in enumerate(zip(serials, instruction_queues))]
 
     print(ports)
 
@@ -71,7 +49,7 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
                 instruction_queues[uid_to_index[uid]].put(("write", args))            
 
 
-class RealDeviceWriteThread(threading.Thread):
+class DeviceWriteThread(threading.Thread):
 
     def __init__(self, ser, instructionQueue):
         self.ser = ser
@@ -94,26 +72,16 @@ class RealDeviceWriteThread(threading.Thread):
                 uid = args[0]
                 params_and_values = args[1]
                 hm.send(self.ser, hm.make_device_write(hm.uid_to_device_id(uid), params_and_values))
-            # self.fake_device_queue.put(instruction)
+            elif instruction == "die":
+                return
 
-class FakeDeviceWriteThread(threading.Thread):
 
-    def __init__(self, ser, instructionQueue, fake_device_queue):
-        self.ser = ser
-        self.queue = instructionQueue
-        self.fake_device_queue = fake_device_queue
-        super().__init__()
+class DeviceReadThread(threading.Thread):
 
-    def run(self):
-        while True:
-            instruction = self.queue.get()
-            self.fake_device_queue.put(instruction)
-
-class RealDeviceReadThread(threading.Thread):
-
-    def __init__(self, index, ser, errorQueue, stateQueue):
+    def __init__(self, index, ser, instructionQueue, errorQueue, stateQueue):
         self.index = index
         self.ser = ser
+        self.instructionQueue = instructionQueue
         self.errorQueue = errorQueue
         self.stateQueue = stateQueue
         self.delay = 0
@@ -137,93 +105,6 @@ class RealDeviceReadThread(threading.Thread):
                     self.stateQueue.put(("device_values", params_and_values))
                 else:
                     print("[HIBIKE] Port %s received data before enumerating!!!" % self.ser.port)
-
-class FakeDeviceReadThread(threading.Thread):
-
-    def __init__(self, ser, errorQueue, stateQueue, fake_device_queue):
-        self.ser = ser
-        self.errorQueue = errorQueue
-        self.stateQueue = stateQueue
-        self.fake_device_queue = fake_device_queue
-        self.delay = 0
-        self.params = []
-
-        self.fake_subscription_thread = FakeSubscriptionThread(fake_uids[self.ser], 0, [], self.fake_device_queue)
-        self.fake_subscription_thread.start()
-        super().__init__()
-
-    def run(self):
-        while True:
-            instruction, args = self.fake_device_queue.get()
-            res = None
-            if instruction == "ping":
-                uid, delay, params = fake_uids[self.ser], self.delay, self.params
-                uid_to_index[uid] = self.ser
-                res = ["device_subscribed", [uid, delay, params]]
-            elif instruction == "subscribe":
-                uid, delay, params = tuple(args)
-                uid_to_index[uid] = self.ser
-                res = ["device_subscribed", [uid, delay, params]]
-
-                self.fake_subscription_thread.quit = True
-                self.fake_subscription_thread.join()
-                self.fake_subscription_thread = FakeSubscriptionThread(uid, delay, params, self.fake_device_queue)
-                self.fake_subscription_thread.start()
-            elif instruction == "device_values":
-                res = [instruction, args]
-
-            self.stateQueue.put(res)
-
-
-
-
-
-            # instruction, args = self.fake_device_queue.get()
-            # res = None
-            # if instruction == "ping":
-            #     uid, delay, params = fake_uids[self.ser], self.delay, self.params
-            #     uid_to_index[uid] = self.ser
-            #     res = ["device_subscribed", [uid, delay, params]]
-            # elif instruction == "subscribe":
-            #     uid, delay, params = tuple(args)
-            #     uid_to_index[uid] = self.ser
-            #     res = ["device_subscribed", [uid, delay, params]]
-
-            #     self.fake_subscription_thread.quit = True
-            #     self.fake_subscription_thread.join()
-            #     self.fake_subscription_thread = FakeSubscriptionThread(uid, delay, params, self.fake_device_queue)
-            #     self.fake_subscription_thread.start()
-            # elif instruction == "device_values":
-            #     res = [instruction, args]
-
-            # self.stateQueue.put(res)
-
-class FakeSubscriptionThread(threading.Thread):
-
-    def __init__(self, uid, delay, params, fake_device_queue):
-        self.uid = uid
-        self.delay = delay
-        self.params = params
-        self.fake_device_queue = fake_device_queue
-        self.quit = False
-        super().__init__()
-
-    def run(self):
-        if self.delay != 0:
-            while True:
-                if self.quit:
-                    return
-                time.sleep(self.delay / 1000.0)
-                param_types = [hm.paramMap[hm.uid_to_device_id(self.uid)][param][1] for param in self.params]
-                params_and_values = {}
-                for param, param_type in zip(self.params, param_types):
-                    if param_type in ("bool", ):
-                        params_and_values[param] = random.choice([True, False])
-                    elif param_type in ("uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t", "uint64_t", "int64_t"):
-                        params_and_values[param] = random.randrange(256)
-                    else:
-                        params_and_values[param] = random.random()
-                self.fake_device_queue.put(("device_values", [self.uid, list(params_and_values.items())]))
 
 
 #############
