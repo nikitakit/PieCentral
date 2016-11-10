@@ -6,11 +6,12 @@ PORT = 3141
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen(5)
-    while 1:
+    while True:
         conn, addr = s.accept()
         msg = bytes()
-        rec = conn.recv(1024)
-        while rec != bytes():
-            msg += rec
-            rec = conn.recv(1024)
+        data = conn.recv(1024)
+        while data:
+            msg += data
+            data = conn.recv(1024)
         print(msg.decode('UTF8'))
+
