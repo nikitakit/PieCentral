@@ -1,15 +1,16 @@
 import socket
 
-s = socket.socket(
-    socket.AF_INET, socket.SOCK_STREAM)
+HOST = 'localhost'
+PORT = 3141
 
-s.bind(('localhost', 3141))
-s.listen(5)
-while 1:
-    (cs, addr) = s.accept()
-    msg = ''
-    rec = cs.recv(1024)
-    while rec:
-        msg += rec
-        rec = cs.recv(1024)
-    print(msg)
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen(5)
+    while 1:
+        conn, addr = s.accept()
+        msg = bytes()
+        rec = conn.recv(1024)
+        while rec != bytes():
+            msg += rec
+            rec = conn.recv(1024)
+        print(msg.decode('UTF8'))

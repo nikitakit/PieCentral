@@ -1,13 +1,10 @@
 import socket
 
-s = socket.socket(
-    socket.AF_INET, socket.SOCK_STREAM)
+PORT = 3141
+HOST = 'localhost'
 
-s.connect(('localhost', 3141))
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    msg = bytes(input('message: '), 'UTF8')
+    s.sendall(msg)
 
-msg = raw_input('message: ')
-while msg != '':
-    sent = s.send(msg)
-    msg = msg[sent:]
-s.shutdown(socket.SHUT_RDWR)
-s.close()
