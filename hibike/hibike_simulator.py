@@ -132,7 +132,6 @@ if __name__ == "__main__":
     newProcess = multiprocessing.Process(target=hibike_process, name="hibike_sim", args=[badThingsQueue, stateQueue, pipeFromChild])
     newProcess.daemon = True
     newProcess.start()
-    pipeToChild.send(["ready", []])
     pipeToChild.send(["enumerate_all", []])
     print(stateQueue.get())
     print(stateQueue.get())
