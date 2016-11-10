@@ -10,7 +10,7 @@ void setup() {
 
   // Setup sensor input
   for (int i = 0; i < NUM_PINS; i++) {
-    pinMode(pins[i], INPUT_PULLUP);
+    pinMode(pins[i], INPUT);
   }
 
 }
@@ -41,7 +41,7 @@ uint32_t device_status(uint8_t param) {
 // append_buf copies the specified amount data into the dst buffer and increments the offset
 uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len) {
   // Read sensor
-  if (buf_len < sizeof(uint16_t) || params>3 || params<0) {
+  if (MAX_PAYLOAD_SIZE - buf_len < sizeof(uint8_t) || param>2 || param<0) {
     return 0;
   }
   data_update_buf[0] = analogRead(pins[param]);
