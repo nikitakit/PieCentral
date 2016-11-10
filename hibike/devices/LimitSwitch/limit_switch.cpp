@@ -30,6 +30,10 @@ uint32_t device_status(uint8_t param) {
   return ~((uint32_t) 0);
 }
 
+uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
+  return 0;
+}
+
 
 // you must implement this function. It is called with a buffer and a maximum buffer size.
 // The buffer should be filled with appropriate data for a DataUpdate packer, and the number of bytes

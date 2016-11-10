@@ -5,7 +5,7 @@ char *DESCRIPTION = DESCRIPTOR;
 message_t hibikeBuff;
 uint64_t prevTime, currTime, heartbeatTime;
 // uint8_t param;
-uint16_t params;
+uint16_t params, old_params;
 uint32_t value;
 uint16_t subDelay;
 led_state heartbeat_state;
@@ -31,6 +31,7 @@ void hibike_loop() {
     if (read_message(&hibikeBuff) == -1) {
       toggleLED();
     } else {
+      int offset;
       switch (hibikeBuff.messageID) {
 
         case SUBSCRIPTION_REQUEST:
@@ -46,10 +47,26 @@ void hibike_loop() {
           break;
 
         case DEVICE_WRITE:
-          params = hibikeBuff.payload[0] - 1;
-          value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
+          //loop over params
+          old_params = params;
+          offset = 2;
+          params = *((uint16_t*)&hibikeBuff.payload[0]);
+          for (uint16_t count = 0; (params >> count) > 0; count++) {
+            if (params & (1<<count)){
+              int status = device_write(count, &hibikeBuff.payload[offset], hibikeBuff.payload_length-offset);
+              if(status){
+                offset += status;}
+              else{
+                params = params & ~(1<<count);}
+              }
+          }
+
+          // params = hibikeBuff.payload[0] - 1;
+          // value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
           //write values
+          *((uint16_t*)&hibikeBuff.payload[0]) = params;
           send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
+          params = old_params;
           break;
 
         case DEVICE_READ:

@@ -1,6 +1,5 @@
 from __future__ import print_function
 # Rewritten because Python.__version__ != 3
-import serial
 import struct
 import pdb
 import os
@@ -8,9 +7,9 @@ import json
 
 config_file = open(os.path.join(os.path.dirname(__file__), 'hibikeDevices.json'), 'r')
 devices = json.load(config_file)
-#devices = {device["id"]: device for device in devices}
-paramMap = {device["id"]: {param["name"]: (param["number"], param["type"]) for param in device["params"]} for device in devices}
 
+paramMap = {device["id"]: {param["name"]: (param["number"], param["type"]) for param in device["params"]} for device in devices}
+devices = {device["id"]: device for device in devices}
 """
 structure of devices
 {0: 
@@ -284,6 +283,30 @@ def make_device_write(device_id, params_and_values):
   message = HibikeMessage(messageTypes["DeviceWrite"], payload)
   return message
 
+def decode_device_write(device_id, message):
+  messageID = message.getmessageID()
+  payload = message.getPayload()
+  messageT = "DeviceWrite"
+  paramB = bin(payload[0])
+  paramNames = decode_params(device_id, paramB)
+  paramT = [paramMap[device_id][name][1] for name in paramNames]
+  typeString = '<H'
+  for t in paramT:
+    typeString += paramTypes[t]
+  tot_values = struct.unpack(typeString, payload)
+  params_and_values = []
+  for i in range(len(paramNames)):
+    param_and_values.append((paramNames[i], tot_values[i+1]))
+  return params_and_values
+
+
+
+
+
+
+
+
+
 def make_device_data(device_id, params_and_values):
   """ Makes and returns DeviceData message.
       If all the params cannot fit, it will fill as many as it can.
@@ -321,6 +344,62 @@ def make_error(error_code):
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["Error"], payload)
   return message
+
+def parse_subscription_response(msg):
+  assert msg.getmessageID() == messageTypes["SubscriptionResponse"]
+  payload = msg.getPayload()
+  assert len(payload) == 15
+  params, delay, device_id, year, ID = struct.unpack("<HHHBQ", payload)
+  params = decode_params(device_id, params)
+  uid = (device_id << 72) | (year << 64) | ID
+  return (params, delay, uid)
+
+def parse_device_data(msg, device_id):
+  assert msg.getmessageID() == messageTypes["DeviceData"]
+  payload = msg.getPayload()
+  assert len(payload) >= 2
+  params,  =  struct.unpack("<H", payload[:2])
+  params = decode_params(device_id, params)
+  struct_format = "<"
+  for param in params:
+    struct_format += paramTypes[paramMap[device_id][param][1]]
+  values = struct.unpack(struct_format, payload[2:])
+  return list(zip(params, values))
+
+
+
+def parse_bytes(bytes):
+  if len(bytes) < 2:
+    return None
+  cobs_frame, message_size = struct.unpack('<BB', bytes[:2])
+  if cobs_frame != 0 or len(bytes) < message_size + 2:
+    return None
+  message = cobs_decode(bytes[2:message_size+2])
+
+  if len(message) < 2:
+    return None
+  messageID, payloadLength = struct.unpack('<BB', message[:2])
+  if len(message) < 2 + payloadLength + 1:
+    return None
+  payload = message[2:2 + payloadLength]
+  chk = struct.unpack('<B', message[2+payloadLength:2+payloadLength+1])[0]
+  if chk != checksum(message[:-1]):
+    #print(chk, checksum(message[:-1]), list(message))
+    return None
+  return HibikeMessage(messageID, payload)
+
+
+
+def blocking_read(serial_conn):
+  buffer = bytearray()
+  while not parse_bytes(buffer):
+    curr = serial_conn.read()
+    if struct.unpack('<B', curr)[0] == 0:
+      buffer = bytearray(curr)
+    else:
+      buffer.extend(curr)
+  return parse_bytes(buffer)
+
 
 # constructs a new object Message by continually reading from input
 # Uses dictionary to figure out length of data to know how many bytes to read
@@ -390,17 +469,27 @@ def cobs_decode(data):
 
 
 class HibikeMessageException(Exception):
-	pass
+  pass
 # Config file helper functions
 
 def device_name_to_id(name):
-	for device in devices:
-		if device["name"] == name:
-			return device["id"]
-	raise HibikeMessageException("Invalid device name: %s" % name)
+  for device in devices.values():
+    if device["name"] == name:
+      return device["id"]
+  raise HibikeMessageException("Invalid device name: %s" % name)
 
 def device_id_to_name(id):
-	for device in devices:
-		if device["id"] == id:
-			return device["name"]
-	raise HibikeMessageException("Invalid device id: %d" % id)
+  for device in devices.values():
+    if device["id"] == id:
+      return device["name"]
+  raise HibikeMessageException("Invalid device id: %d" % id)
+
+def uid_to_device_name(uid):
+  return device_id_to_name(uid_to_device_id(uid))
+
+def uid_to_device_id(uid):
+  return uid >> 72
+
+
+def all_params_for_device_id(id):
+  return list(paramMap[id].keys())
