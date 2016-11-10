@@ -11,10 +11,10 @@ bool led_enabled;
 
 uint8_t pins[NUM_PINS] = {SERVO_0, SERVO_1, SERVO_2, SERVO_3};
 
-volatile uint32_t toggle0 = 1; // 0 means servo off, 1 means on
-volatile uint32_t toggle1 = 1; 
-volatile uint32_t toggle2 = 1; 
-volatile uint32_t toggle3 = 1; 
+volatile uint8_t toggle0 = 1; // 0 means servo off, 1 means on
+volatile uint8_t toggle1 = 1; 
+volatile uint8_t toggle2 = 1; 
+volatile uint8_t toggle3 = 1; 
 
 void setup() {
   hibike_setup();
@@ -33,36 +33,40 @@ void loop() {
 
 // you must implement this function. It is called when the device receives a DeviceUpdate packet.
 // the return value is the value field of the DeviceRespond packet hibike will respond with
-uint32_t device_update(uint8_t param, uint32_t value) {
+uint32_t device_write(uint8_t param, uint8_t* value, size_t len) {
+  if(param< NUM_PINS && len< sizeof(servos[param]) || len< sizeof(toggle0)){
+    return 0;
+  }
+
   if (param < NUM_PINS) {
-    servos[param].write(value);
-    return servos[param].read();
+    servos[param].write((value[0]);
+    return sizeof(value[0]);
   }
 
   switch (param) {
 
     case TOGGLE0:
-      toggle0 = value;
-      return toggle_servo(0, toggle0);
+      toggle0 = value[0];
+      return sizeof(toggle_servo(0, toggle0));
       break;
 
     case TOGGLE1:
-      toggle1 = value;
-      return toggle_servo(0, toggle1);
+      toggle1 = value[0];
+      return sizeof(toggle_servo(1, toggle1));
       break;
 
     case TOGGLE2:
-      toggle2 = value;
-      return toggle_servo(0, toggle2);
+      toggle2 = value[0];
+      return sizeof(toggle_servo(2, toggle2));
       break;
 
     case TOGGLE3:
-      toggle3 = value;
-      return toggle_servo(0, toggle3);
+      toggle3 = value[0];
+      return sizeof(toggle_servo(3, toggle3));
       break;
 
     default:
-      return ~((uint32_t) 0);
+      return 0;
   }
 }
 
