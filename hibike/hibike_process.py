@@ -14,7 +14,7 @@ uid_to_index = {}
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
 
-    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
+    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*") + ["/dev/pts/4"]
     serials = [serial.Serial(port, 115200) for port in ports]
 
     # each device has it's own write thread, with it's own instruction queue
