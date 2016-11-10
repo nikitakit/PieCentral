@@ -165,10 +165,3 @@ if __name__ == "__main__":
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
             print("%10.2f, %s" % (time.time(), str(args)))
-    # print(stateQueue.get())
-    # print(stateQueue.get())
-    # print(stateQueue.get())
-    # pipeToChild.send(["subscribe_device", [0, 1000, ["switch0", "switch2"]]])
-    # print(stateQueue.get())
-    # while True:
-    #     print(stateQueue.get())
