@@ -13,10 +13,13 @@ args = parser.parse_args()
 
 HOST = args.ip
 PORT = int(args.port)
-while True:
+while True: #runs once unless in persistent mode
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-        msg = bytes(input('message: '), 'UTF8')
+        try: 
+            msg = bytes(input('message: '), 'UTF8')
+        except EOFError: #for sending a file piped in from stdin
+            break
         s.sendall(msg)
     if not args.persistent:
         break

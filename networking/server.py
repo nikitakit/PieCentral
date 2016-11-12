@@ -1,6 +1,5 @@
 import socket
 import argparse
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--ip", default='localhost',
                     help="client ip, default localhost")
@@ -22,4 +21,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         while data:
             msg += data
             data = conn.recv(1024)
-        print(msg.decode('UTF8'))
+        print(msg.decode('UTF8'), flush=True)
+
