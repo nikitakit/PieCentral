@@ -35,19 +35,19 @@ uid = (device_id << 72) | (year << 64) | id
 
 # Here, the parameters and values to be sent in device datas are set for each device type, the list of subscribed parameters is set to empty,
 if device_id in [hm.deviceTypes["LimitSwitch"]]: 
-        subscribed_params = [0, 0, 0, 0]
+        subscribed_params = []
         params_and_values = [("switch0", True), ("switch1", True), ("switch2", False), ("switch3", False)]
 if device_id in [hm.deviceTypes["ServoControl"]]:
-        subscribed_params = [0, 0, 0, 0, 0, 0, 0, 0]
+        subscribed_params = []
         params_and_values = [("servo0", 2), ("enable0", True), ("servo1", 0), ("enable1", True), ("servo2", 5), ("enable2", True), ("servo3", 3), ("enable3", False)]
 
 while (True):
         if (updateTime != 0 and delay != 0):
                 if((time.time() - updateTime) >= (delay * 0.001)): #If the time equal to the delay has elapsed since the previous device data, send a device data with the device id and the device's subscribed params and values
-                        data = 0
+                        data = []
                         for data_tuple in params_and_values:
                                 if data_tuple[0] in subscribed_params:
-                                        data.append[data_tuple]
+                                        data.append(data_tuple)
                         hm.send(conn, hm.make_device_data(device_id, data))
                         updateTime = time.time()
                         print("Regular data update sent")

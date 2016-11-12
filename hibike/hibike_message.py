@@ -212,7 +212,9 @@ def make_subscription_response(device_id, params, delay, uid):
   for i in range(len(entries)):
       tot = tot ^ entries[i]
   
-  device_type, year, id_num = struct.unpack("<HBQ", uid)
+  device_type = getDeviceType(uid)
+  year = getYear(uid)
+  id_num = getID(uid)
   temp_payload = struct.pack("<HHHBQ", tot, delay, device_type, year, id_num)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionResponse"], payload)
