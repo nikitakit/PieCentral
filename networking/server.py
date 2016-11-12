@@ -1,7 +1,16 @@
 import socket
+import argparse
 
-HOST = 'localhost'
-PORT = 3141
+parser = argparse.ArgumentParser()
+parser.add_argument("--ip", default='localhost',
+                    help="client ip, default localhost")
+parser.add_argument("--port", default='3141',
+                    help="connection port, default 3141")
+
+args = parser.parse_args()
+
+HOST = args.ip
+PORT = int(args.port)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
@@ -14,4 +23,3 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             msg += data
             data = conn.recv(1024)
         print(msg.decode('UTF8'))
-
