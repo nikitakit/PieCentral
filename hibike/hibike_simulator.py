@@ -1,7 +1,7 @@
 import time, random
 import threading
 import multiprocessing
-from . import hibike_message as hm
+import hibike_message as hm
 import queue
 
 __all__ = ["hibike_process"]
@@ -23,10 +23,10 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
     fake_device_queues = [queue.Queue() for _ in ports]
 
     # each device has one write thread that receives instructions from the main thread and writes to devices
-    write_threads = [DeviceWriteThread(ser, iq, fake_device_queue) for ser, iq, fake_device_queue in zip(serials, instruction_queues, fake_device_queues)]
+    write_threads = [threading.Thread(target=runDeviceWrite, args=(ser, iq, fake_device_queue), daemon=True) for ser, iq, fake_device_queue in zip(serials, instruction_queues, fake_device_queues)]
     
     # each device has a read thread that reads from devices and writes directly to stateManager
-    read_threads = [DeviceReadThread(ser, None, stateQueue, fake_device_queue) for ser, fake_device_queue in zip(serials, fake_device_queues)]
+    read_threads = [threading.Thread(target=runDeviceRead, args=(ser, None, stateQueue, fake_device_queue), daemon=True) for ser, fake_device_queue in zip(serials, fake_device_queues)]
     
     for read_thread in read_threads:
         read_thread.start()
@@ -44,81 +44,57 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
             if uid in uid_to_index:
                 instruction_queues[uid_to_index[uid]].put(("subscribe", args))
 
-class DeviceWriteThread(threading.Thread):
+def runDeviceWrite(ser, instructionQueue, fake_device_queue):
+    while True:
+        instruction = instructionQueue.get()
+        fake_device_queue.put(instruction)
 
-    def __init__(self, ser, instructionQueue, fake_device_queue):
-        self.ser = ser
-        self.queue = instructionQueue
-        self.fake_device_queue = fake_device_queue
-        super().__init__()
+def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
+    delay = 0
+    params = []
 
-    def run(self):
+    stop_event = threading.Event()
+    fake_subscription_thread = threading.Thread(target=runFakeSubscription, args=(fake_uids[ser], 0, [], fake_device_queue, stop_event), daemon=True)
+    fake_subscription_thread.start()
+
+    while True:
+        instruction, args = fake_device_queue.get()
+        res = None
+        if instruction == "ping":
+            uid, delay, params = fake_uids[ser], delay, params
+            uid_to_index[uid] = ser
+            res = ["device_subscribed", [uid, delay, params]]
+        elif instruction == "subscribe":
+            uid, delay, params = tuple(args)
+            uid_to_index[uid] = ser
+            res = ["device_subscribed", [uid, delay, params]]
+
+            stop_event.set()
+            fake_subscription_thread.join()
+            stop_event.clear()
+            fake_subscription_thread = threading.Thread(target=runFakeSubscription(uid, delay, params, fake_device_queue, stop_event), daemon=True)
+            fake_subscription_thread.start()
+        elif instruction == "device_values":
+            res = [instruction, args]
+
+        stateQueue.put(res)
+
+def runFakeSubscription(uid, delay, params, fake_device_queue, stop_event):
+    if delay != 0:
         while True:
-            instruction = self.queue.get()
-            self.fake_device_queue.put(instruction)
-
-class DeviceReadThread(threading.Thread):
-
-    def __init__(self, ser, errorQueue, stateQueue, fake_device_queue):
-        self.ser = ser
-        self.errorQueue = errorQueue
-        self.stateQueue = stateQueue
-        self.fake_device_queue = fake_device_queue
-        self.delay = 0
-        self.params = []
-
-        self.fake_subscription_thread = FakeSubscriptionThread(fake_uids[self.ser], 0, [], self.fake_device_queue)
-        self.fake_subscription_thread.start()
-        super().__init__()
-
-    def run(self):
-        while True:
-            instruction, args = self.fake_device_queue.get()
-            res = None
-            if instruction == "ping":
-                uid, delay, params = fake_uids[self.ser], self.delay, self.params
-                uid_to_index[uid] = self.ser
-                res = ["device_subscribed", [uid, delay, params]]
-            elif instruction == "subscribe":
-                uid, delay, params = tuple(args)
-                uid_to_index[uid] = self.ser
-                res = ["device_subscribed", [uid, delay, params]]
-
-                self.fake_subscription_thread.quit = True
-                self.fake_subscription_thread.join()
-                self.fake_subscription_thread = FakeSubscriptionThread(uid, delay, params, self.fake_device_queue)
-                self.fake_subscription_thread.start()
-            elif instruction == "device_values":
-                res = [instruction, args]
-
-            self.stateQueue.put(res)
-
-class FakeSubscriptionThread(threading.Thread):
-
-    def __init__(self, uid, delay, params, fake_device_queue):
-        self.uid = uid
-        self.delay = delay
-        self.params = params
-        self.fake_device_queue = fake_device_queue
-        self.quit = False
-        super().__init__()
-
-    def run(self):
-        if self.delay != 0:
-            while True:
-                if self.quit:
-                    return
-                time.sleep(self.delay / 1000.0)
-                param_types = [hm.paramMap[hm.uid_to_device_id(self.uid)][param][1] for param in self.params]
-                params_and_values = {}
-                for param, param_type in zip(self.params, param_types):
-                    if param_type in ("bool", ):
-                        params_and_values[param] = random.choice([True, False])
-                    elif param_type in ("uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t", "uint64_t", "int64_t"):
-                        params_and_values[param] = random.randrange(256)
-                    else:
-                        params_and_values[param] = random.random()
-                self.fake_device_queue.put(("device_values", [self.uid, list(params_and_values.items())]))
+            if stop_event.is_set():
+                return
+            time.sleep(delay / 1000.0)
+            param_types = [hm.paramMap[hm.uid_to_device_id(uid)][param][1] for param in params]
+            params_and_values = {}
+            for param, param_type in zip(params, param_types):
+                if param_type in ("bool", ):
+                    params_and_values[param] = random.choice([True, False])
+                elif param_type in ("uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t", "uint64_t", "int64_t"):
+                    params_and_values[param] = random.randrange(256)
+                else:
+                    params_and_values[param] = random.random()
+            fake_device_queue.put(("device_values", [uid, list(params_and_values.items())]))
 
 
 #############

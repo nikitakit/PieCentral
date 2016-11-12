@@ -246,10 +246,22 @@ def startHibike(badThingsQueue, stateQueue, pipe):
   except Exception as e:
     badThingsQueue.put(BadThing(sys.exc_info(), str(e)))
 
+def addPaths():
+  """Modify sys.path so we can find hibike.
+  """
+  path = (os.path.dirname(os.path.abspath(__file__)))
+  parent_path = path.rstrip("runtime/testy")
+  hibike = parent_path + "/hibike"
+  sys.path.insert(1, hibike)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--test', nargs='*', help='Run specified tests. If no arguments, run all tests.')
     args = parser.parse_args()
+
+    addPaths()
+
     if args.test == None:
       runtime()
     else:
