@@ -46,7 +46,9 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
 
 def runDeviceWrite(ser, instructionQueue, fake_device_queue):
     while True:
+        print("deviceWrite waiting")
         instruction = instructionQueue.get()
+        print("deviceWrite waiting")
         fake_device_queue.put(instruction)
 
 def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
@@ -58,7 +60,9 @@ def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
     fake_subscription_thread.start()
 
     while True:
+        print("deviceRead waiting")
         instruction, args = fake_device_queue.get()
+        print("deviceRead got")
         res = None
         if instruction == "ping":
             uid, delay, params = fake_uids[ser], delay, params
@@ -69,21 +73,26 @@ def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
             uid_to_index[uid] = ser
             res = ["device_subscribed", [uid, delay, params]]
 
+            print("setting stop_event")
             stop_event.set()
             fake_subscription_thread.join()
             stop_event.clear()
+            print("clearing stop_event")
             fake_subscription_thread = threading.Thread(target=runFakeSubscription(uid, delay, params, fake_device_queue, stop_event), daemon=True)
             fake_subscription_thread.start()
         elif instruction == "device_values":
             res = [instruction, args]
 
+        print("printing\n" + str(res) + "\n\n")
         stateQueue.put(res)
 
 def runFakeSubscription(uid, delay, params, fake_device_queue, stop_event):
     if delay != 0:
         while True:
             if stop_event.is_set():
+                print("stop_event True")
                 return
+            print("stop_event False")
             time.sleep(delay / 1000.0)
             param_types = [hm.paramMap[hm.uid_to_device_id(uid)][param][1] for param in params]
             params_and_values = {}
