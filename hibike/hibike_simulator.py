@@ -80,9 +80,10 @@ def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
             res = ["device_subscribed", [uid, delay, params]]
 
             print("setting stop_event")
+            print("thread was alive: " + str(fake_subscription_thread.is_alive()))
             stop_event.set()
             fake_subscription_thread.join()
-            print("thread alive: " + str(fake_subscription_thread.is_alive()))
+            print("thread still alive: " + str(fake_subscription_thread.is_alive()))
             stop_event.clear()
             print("clearing stop_event")
             fake_subscription_thread = threading.Thread(target=runFakeSubscription(uid, delay, params, fake_device_queue, thread_ready, stop_event), daemon=True)
