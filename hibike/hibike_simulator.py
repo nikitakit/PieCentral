@@ -1,112 +1,82 @@
 import time, random
 import threading
 import multiprocessing
-import hibike_message as hm
+from . import hibike_message as hm
 import queue
 
 __all__ = ["hibike_process"]
 
 fake_uids = [0 << 72, 7 << 72]
 
-
-uid_to_index = {}
+# This is what actually "knows" about. Only updated after enumeration
+uid_to_queue = {}
 
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
-    ports = ['0', '1']
-    serials = [int(port) for port in ports]
-
-    # each device has it's own write thread, with it's own instruction queue
-    instruction_queues = [queue.Queue() for _ in ports]
-
-    # since this is a simulation and there are no real devices, this is how the write threads interface with the read threads
-    fake_device_queues = [queue.Queue() for _ in ports]
-
-    # each device has one write thread that receives instructions from the main thread and writes to devices
-    write_threads = [threading.Thread(target=runDeviceWrite, args=(ser, iq, fake_device_queue), daemon=True) for ser, iq, fake_device_queue in zip(serials, instruction_queues, fake_device_queues)]
-    
-    # each device has a read thread that reads from devices and writes directly to stateManager
-    read_threads = [threading.Thread(target=runDeviceRead, args=(ser, None, stateQueue, fake_device_queue), daemon=True) for ser, fake_device_queue in zip(serials, fake_device_queues)]
-    
-    for read_thread in read_threads:
-        read_thread.start()
-    for write_thread in write_threads:
-        write_thread.start()
+    devices = [FakeDevice(uid, stateQueue) for uid in fake_uids]
+    for device in devices:
+        device.start()
 
     # the main thread reads instructions from statemanager and forwards them to the appropriate device write threads
     while True:
         instruction, args = pipeFromChild.recv()
         if instruction == "enumerate_all":
-            for instruction_queue in instruction_queues:
-                instruction_queue.put(("ping", []))
+            for device in devices:
+                device.instruction_queue.put(("ping", []))
         elif instruction == "subscribe_device":
             uid = args[0]
-            if uid in uid_to_index:
-                print("putting onto instruction_queue: " + str(args))
-                instruction_queues[uid_to_index[uid]].put(("subscribe", args))
+            if uid in uid_to_queue:
+                uid_to_queue[uid].put(("subscribe", args))
             else:
                 print('not found uid')
 
-def runDeviceWrite(ser, instructionQueue, fake_device_queue):
+def runDeviceWrite(instruction_queue, fake_device_queue):
+    # instruction_queue is input
+    # fake_device_queue is output to smart sensor
     while True:
-        print("deviceWrite waiting")
-        instruction = instructionQueue.get()
-        fake_device_queue.put(instruction)
-        print("deviceWrite done waiting, put: " + str(instruction))
+        instruction, args = instruction_queue.get()
 
-def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
-    delay = 0
-    params = []
-
-    thread_ready = threading.Event()
-    stop_event = threading.Event()
-    fake_subscription_thread = threading.Thread(target=runFakeSubscription, args=(fake_uids[ser], 0, [], fake_device_queue, thread_ready, stop_event), daemon=True)
-    fake_subscription_thread.start()
-    thread_ready.wait()
-    thread_ready.clear()
-
-    while True:
-        print("deviceRead waiting")
-        instruction, args = fake_device_queue.get()
-        print("deviceRead got: " + str(instruction) + " : " + str(args))
-        res = None
         if instruction == "ping":
-            uid, delay, params = fake_uids[ser], delay, params
-            uid_to_index[uid] = ser
-            res = ["device_enumerated", [uid, delay, params]]
+            fake_device_queue.put(0)
         elif instruction == "subscribe":
             uid, delay, params = tuple(args)
-            uid_to_index[uid] = ser
-            res = ["device_subscribed", [uid, delay, params]]
+            fake_device_queue.put(delay)
+            fake_device_queue.put(params)
 
-            print("setting stop_event")
-            print("thread was alive: " + str(fake_subscription_thread.is_alive()))
-            stop_event.set()
-            fake_subscription_thread.join()
-            print("thread still alive: " + str(fake_subscription_thread.is_alive()))
-            stop_event.clear()
-            print("clearing stop_event")
-            fake_subscription_thread = threading.Thread(target=runFakeSubscription(uid, delay, params, fake_device_queue, thread_ready, stop_event), daemon=True)
-            fake_subscription_thread.start()
-            thread_ready.wait()
-            thread_ready.clear()
-            print("started new thread")
-        elif instruction == "device_values":
-            res = [instruction, args]
+def runDeviceRead(fake_device_readings, stateQueue, instruction_queue):
+    while True:
+        result, values = fake_device_readings.get()
+        res = None
+        if result == "device_values":
+            res = [result, values]
+        elif result == "device_enumerated":
+            uid = values[0]
+            if uid in uid_to_queue:
+                del uid_to_queue[uid]
+            uid_to_queue[uid] = instruction_queue
+        else:
+            print("Some error code received")
 
-        print("printing\n" + str(res) + "\n\n")
         stateQueue.put(res)
 
-def runFakeSubscription(uid, delay, params, fake_device_queue, thread_ready, stop_event):
-    thread_ready.set()
-    if delay != 0:
-        print("delay: " + str(delay))
-        while True:
-            if stop_event.is_set():
-                print("stop_event: " + str(stop_event.is_set()))
-                return
-            print("stop_event False, delay: " + str(delay))
-            time.sleep(delay / 1000.0)
+def runFakeSubscription(uid, fake_device_queue, fake_device_readings):
+    # fake_device_queue is input commands
+    # fake_device_readings is output of fake readings
+    timeout = None
+    new_delay = False
+    while True:
+        try:
+            delay = fake_device_queue.get(block=timeout==None, timeout=timeout)
+            new_delay = True
+        except queue.Empty:
+            pass
+        # Simulate enumeration
+        if delay == 0:
+            fake_device_readings.put(("device_enumerated", [uid, 0, []]))
+        # Simulate subscription
+        elif delay > 0:
+            if new_delay:
+                params = fake_device_queue.get()
             param_types = [hm.paramMap[hm.uid_to_device_id(uid)][param][1] for param in params]
             params_and_values = {}
             for param, param_type in zip(params, param_types):
@@ -116,9 +86,40 @@ def runFakeSubscription(uid, delay, params, fake_device_queue, thread_ready, sto
                     params_and_values[param] = random.randrange(256)
                 else:
                     params_and_values[param] = random.random()
-            fake_device_queue.put(("device_values", [uid, list(params_and_values.items())]))
-    else:
-        print("delay was 0")
+            fake_device_readings.put(("device_values", [uid, list(params_and_values.items())]))
+            timeout = delay / 1000.0
+            new_delay = False
+        else:
+            print("Invalid negative delay: {:d}".format(delay))
+
+class FakeDevice():
+    def __init__(self, uid, stateQueue):
+        self.uid = uid
+        self.stateQueue = stateQueue
+
+        # Hibike doesn't actually know about these queues. They are here
+        # to simulate the hardware serial ports. 
+        self.instruction_queue = queue.Queue()
+        self.fake_device_queue = queue.Queue()
+        self.fake_device_readings = queue.Queue()
+
+    def start(self):
+        fakeWriteThread = threading.Thread(
+            target=runDeviceWrite,
+            args=(self.instruction_queue, self.fake_device_queue),
+            daemon=True)
+        fakeReadThread = threading.Thread(
+            target=runDeviceRead,
+            args=(self.fake_device_readings, self.stateQueue, self.instruction_queue),
+            daemon=True)
+        fakeDeviceThread = threading.Thread(
+            target=runFakeSubscription,
+            args=(self.uid, self.fake_device_queue, self.fake_device_readings),
+            daemon=True)
+
+        threads = [fakeWriteThread, fakeReadThread, fakeDeviceThread]
+        for thread in threads:
+            thread.start()
 
 
 #############
@@ -132,12 +133,12 @@ if __name__ == "__main__":
     newProcess = multiprocessing.Process(target=hibike_process, name="hibike_sim", args=[badThingsQueue, stateQueue, pipeFromChild])
     newProcess.daemon = True
     newProcess.start()
+    print("enumerating")
     pipeToChild.send(["enumerate_all", []])
     print(stateQueue.get())
     print(stateQueue.get())
     print("sending pipeToChild")
     pipeToChild.send(["subscribe_device", [0, 1000, ["switch0", "switch2"]]])
     print("done sending pipe"   )
-    print(stateQueue.get())
     while True:
         print(stateQueue.get())
