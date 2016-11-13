@@ -58,11 +58,12 @@ def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
     delay = 0
     params = []
 
+    thread_ready = threading.Event()
     stop_event = threading.Event()
-    fake_subscription_thread = threading.Thread(target=runFakeSubscription, args=(fake_uids[ser], 0, [], fake_device_queue, stop_event), daemon=True)
+    fake_subscription_thread = threading.Thread(target=runFakeSubscription, args=(fake_uids[ser], 0, [], fake_device_queue, thread_ready, stop_event), daemon=True)
     fake_subscription_thread.start()
-    stop_event.wait()
-    stop_event.clear()
+    thread_ready.wait()
+    thread_ready.clear()
 
     while True:
         print("deviceRead waiting")
@@ -84,10 +85,10 @@ def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
             print("thread alive: " + str(fake_subscription_thread.is_alive()))
             stop_event.clear()
             print("clearing stop_event")
-            fake_subscription_thread = threading.Thread(target=runFakeSubscription(uid, delay, params, fake_device_queue, stop_event), daemon=True)
+            fake_subscription_thread = threading.Thread(target=runFakeSubscription(uid, delay, params, fake_device_queue, thread_ready, stop_event), daemon=True)
             fake_subscription_thread.start()
-            stop_event.wait()
-            stop_event.clear()
+            thread_ready.wait()
+            thread_ready.clear()
             print("started new thread")
         elif instruction == "device_values":
             res = [instruction, args]
@@ -95,13 +96,13 @@ def runDeviceRead(ser, errorQueue, stateQueue, fake_device_queue):
         print("printing\n" + str(res) + "\n\n")
         stateQueue.put(res)
 
-def runFakeSubscription(uid, delay, params, fake_device_queue, stop_event):
-    stop_event.set()
+def runFakeSubscription(uid, delay, params, fake_device_queue, thread_ready, stop_event):
+    thread_ready.set()
     if delay != 0:
         print("delay: " + str(delay))
         while True:
-            print("stop_event: " + str(stop_event.is_set()))
             if stop_event.is_set():
+                print("stop_event: " + str(stop_event.is_set()))
                 return
             print("stop_event False, delay: " + str(delay))
             time.sleep(delay / 1000.0)
