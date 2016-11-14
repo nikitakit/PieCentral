@@ -48,15 +48,18 @@ def runDeviceRead(fake_device_readings, stateQueue, instruction_queue):
         res = None
         if result == "device_values":
             res = [result, values]
-        elif result == "device_enumerated":
+        elif result == "device_subscribed":
             uid = values[0]
             if uid in uid_to_queue:
                 del uid_to_queue[uid]
             uid_to_queue[uid] = instruction_queue
+            res = ["device_subscribed", values]
         else:
             print("Some error code received")
+            print(result, values)
 
-        stateQueue.put(res)
+        if res is not None:
+            stateQueue.put(res)
 
 def runFakeSubscription(uid, fake_device_queue, fake_device_readings):
     # fake_device_queue is input commands
@@ -71,7 +74,8 @@ def runFakeSubscription(uid, fake_device_queue, fake_device_readings):
             pass
         # Simulate enumeration
         if delay == 0:
-            fake_device_readings.put(("device_enumerated", [uid, 0, []]))
+            params = list(paramMap[uid_to_device_id(uid)].keys())
+            fake_device_readings.put(("device_subscribed", [uid, 0, params]))
         # Simulate subscription
         elif delay > 0:
             if new_delay:

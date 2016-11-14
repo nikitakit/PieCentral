@@ -201,6 +201,8 @@ def runtimeTest(testNames):
               print(newBadThing.event)
               if newBadThing.event in restartEvents:
                 break
+              else:
+                print(newBadThing)
             except Exception as e:
               print(e)
           stateQueue.put([SM_COMMANDS.RESET, []])
