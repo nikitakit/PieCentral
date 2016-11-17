@@ -34,7 +34,7 @@
         {"number": 3  , "name": "cell2"      , "type": "float"   , "read": true , "write": false },
         {"number": 4  , "name": "cell3"      , "type": "float"   , "read": true , "write": false },
         {"number": 5  , "name": "total"      , "type": "float"   , "read": true , "write": false },
-        {"number": 6  , "name": "callibrate" , "type": "bool"    , "read": false, "write": true  }
+        {"number": 6  , "name": "calibrate" , "type": "bool"    , "read": false, "write": true  }
         ]
     },
 

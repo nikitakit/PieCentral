@@ -245,9 +245,9 @@ def startHibike(badThingsQueue, stateQueue, pipe):
   def addPaths():
     """Modify sys.path so we can find hibike.
     """
-    path = (os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.dirname(os.path.abspath(__file__))
     parent_path = path.rstrip("runtime/testy")
-    hibike = parent_path + "/hibike"
+    hibike = os.path.join(parent_path, "hibike")
     sys.path.insert(1, hibike)
 
   try:

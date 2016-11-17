@@ -152,10 +152,10 @@ class StateManager(object):
     pipe.send([HIBIKE_COMMANDS.SUBSCRIBE.value, [uid, delay, params]])
 
   def hibikeWriteParams(self, pipe, uid, param_values):
-    pipe.send([HIBIKE_COMMANDS.WRITE, [uid, param_values]])
+    pipe.send([HIBIKE_COMMANDS.WRITE.value, [uid, param_values]])
 
   def hibikeReadParams(self, pipe, uid, params):
-    pipe.send([HIBIKE_COMMANDS.READ, [uid, params]])
+    pipe.send([HIBIKE_COMMANDS.READ.value, [uid, params]])
 
   def hibikeResponseDeviceSubbed(self, uid, delay, params):
     for param in params:
