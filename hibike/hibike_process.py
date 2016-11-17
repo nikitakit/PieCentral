@@ -14,7 +14,7 @@ uid_to_index = {}
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
 
-    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*") + ["/dev/pts/5"]
+    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*") + open("virtual_devices.txt", "r").read().split()
     serials = [serial.Serial(port, 115200) for port in ports]
 
     # each device has it's own write thread, with it's own instruction queue
@@ -46,7 +46,11 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
         elif instruction == "write_params":
             uid = args[0]
             if uid in uid_to_index:
-                instruction_queues[uid_to_index[uid]].put(("write", args))            
+                instruction_queues[uid_to_index[uid]].put(("write", args))
+        elif instruction == "read_params":
+            uid = args[0]
+            if uid in uid_to_index:
+                instruction_queues[uid_to_index[uid]].put(("read", args))            
 
 
 class DeviceWriteThread(threading.Thread):
@@ -68,6 +72,10 @@ class DeviceWriteThread(threading.Thread):
                 delay = args[1]
                 params = args[2]
                 hm.send(self.ser, hm.make_subscription_request(hm.uid_to_device_id(uid), params, delay))
+            elif instruction == "read":
+                uid = args[0]
+                params = args[1]
+                hm.send(self.ser, hm.make_device_read(hm.uid_to_device_id(uid), params))
             elif instruction == "write":
                 uid = args[0]
                 params_and_values = args[1]
