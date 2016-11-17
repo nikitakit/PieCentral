@@ -14,7 +14,7 @@ uid_to_index = {}
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
 
-    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*") + ["/dev/pts/4"]
+    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*") + ["/dev/pts/5"]
     serials = [serial.Serial(port, 115200) for port in ports]
 
     # each device has it's own write thread, with it's own instruction queue
@@ -161,6 +161,15 @@ if __name__ == "__main__":
                         make_send_write(pipeToChild, uid, [("duty", 0),   ("forward", False)]),
                         make_send_write(pipeToChild, uid, [("duty", 50),  ("forward", False)]),
                         make_send_write(pipeToChild, uid, [("duty", 100), ("forward", False)])
+                        ], 1)
+                elif hm.devices[hm.uid_to_device_id(uid)]["name"] == "ServoControl":
+                    set_interval_sequence([
+                        make_send_write(pipeToChild, uid, [("servo0", 1), ("enable0", False), ("servo1", 21), ("enable1", True), ("servo2", 30), ("enable2", True), ("servo3", 8), ("enable3", True)]),
+                        make_send_write(pipeToChild, uid, [("servo0", 5), ("enable0", False), ("servo1", 5), ("enable1", True), ("servo2", 5), ("enable2", True), ("servo3", 5), ("enable3", False)]),
+                        make_send_write(pipeToChild, uid, [("servo0", 1), ("enable0", True), ("servo1", 26), ("enable1", True), ("servo2", 30), ("enable2", False), ("servo3", 17), ("enable3", True)]),
+                        make_send_write(pipeToChild, uid, [("servo0", 13), ("enable0", False), ("servo1", 7), ("enable1", False), ("servo2", 24), ("enable2", True), ("servo3", 10), ("enable3", True)]),
+                        make_send_write(pipeToChild, uid, [("servo0", 27), ("enable0", True), ("servo1", 2), ("enable1", False), ("servo2", 3), ("enable2", False), ("servo3", 14), ("enable3", False)]),
+                        make_send_write(pipeToChild, uid, [("servo0", 20), ("enable0", True), ("servo1", 12), ("enable1", False), ("servo2", 20), ("enable2", False), ("servo3", 29), ("enable3", True)]),
                         ], 1)
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
