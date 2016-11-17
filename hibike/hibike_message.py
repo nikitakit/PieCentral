@@ -8,7 +8,7 @@ import json
 config_file = open(os.path.join(os.path.dirname(__file__), 'hibikeDevices.json'), 'r')
 devices = json.load(config_file)
 
-paramMap = {device["id"]: {param["name"]: (param["number"], param["type"]) for param in device["params"]} for device in devices}
+paramMap = {device["id"]: {param["name"]: (param["number"], param["type"], param["read"], param["write"]) for param in device["params"]} for device in devices}
 devices = {device["id"]: device for device in devices}
 """
 structure of devices
@@ -55,7 +55,7 @@ deviceTypes = {
   "Encoder"       :       0x03,
   "BatteryBuzzer" :       0x04,
   "TeamFlag"      :       0x05,
-  "Grizzly"       :       0x06,
+  "YogiBear"      :       0x06,
   "ServoControl"  :       0x07,
   "LinearActuator":       0x08,
   "ColorSensor"   :       0x09,
@@ -285,7 +285,7 @@ def make_device_write(device_id, params_and_values):
   message = HibikeMessage(messageTypes["DeviceWrite"], payload)
   return message
 
-def decode_device_write(device_id, message):
+def old_decode_device_write(device_id, message):
   messageID = message.getmessageID()
   payload = message.getPayload()
   messageT = "DeviceWrite"
@@ -301,7 +301,17 @@ def decode_device_write(device_id, message):
     param_and_values.append((paramNames[i], tot_values[i+1]))
   return params_and_values
 
-
+def decode_device_write(msg, device_id):
+  assert msg.getmessageID() == messageTypes["DeviceWrite"]
+  payload = msg.getPayload()
+  assert len(payload) >= 2
+  params,  =  struct.unpack("<H", payload[:2])
+  params = decode_params(device_id, params)
+  struct_format = "<"
+  for param in params:
+    struct_format += paramTypes[paramMap[device_id][param][1]]
+  values = struct.unpack(struct_format, payload[2:])
+  return list(zip(params, values))
 
 
 
