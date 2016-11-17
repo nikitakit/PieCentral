@@ -60,7 +60,7 @@ while (True):
              
         msg = hm.read(conn)
         if not msg:
-             time.sleep(.0005)
+             time.sleep(.005)
              continue
         if msg.getmessageID() in [hm.messageTypes["SubscriptionRequest"]]: #Update the delay, subscription time, and params, then send a subscription response 
              print("Subscription request recieved")
