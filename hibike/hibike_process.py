@@ -5,9 +5,9 @@ import hibike_message as hm
 import queue
 import glob
 import serial
-__all__ = ["hibike_process"]
+import os
 
-fake_uids = [0 << 72, 7 << 72]
+__all__ = ["hibike_process"]
 
 
 uid_to_index = {}
@@ -17,7 +17,8 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
     ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
 
     try:
-        ports.extend(open("virtual_devices.txt", "r").read().split())
+        virtual_device_config_file = os.path.join(os.path.dirname(__file__), "virtual_devices.txt")
+        ports.extend(open(virtual_device_config_file, "r").read().split())
     except IOError:
         pass
 
@@ -144,7 +145,6 @@ if __name__ == "__main__":
     newProcess = multiprocessing.Process(target=hibike_process, name="hibike_sim", args=[badThingsQueue, stateQueue, pipeFromChild])
     newProcess.daemon = True
     newProcess.start()
-    pipeToChild.send(["ready", []])
     pipeToChild.send(["enumerate_all", []])
     uids = set()
     while True:
@@ -183,10 +183,3 @@ if __name__ == "__main__":
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
             print("%10.2f, %s" % (time.time(), str(args)))
-    # print(stateQueue.get())
-    # print(stateQueue.get())
-    # print(stateQueue.get())
-    # pipeToChild.send(["subscribe_device", [0, 1000, ["switch0", "switch2"]]])
-    # print(stateQueue.get())
-    # while True:
-    #     print(stateQueue.get())
