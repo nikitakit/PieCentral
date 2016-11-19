@@ -1,6 +1,5 @@
 #include "YogiBear.h"
-
-// each device is responsible for keeping track of it's own params
+#include <TimerOne.h>
 
 /*
   YOGI BEAR PARAMS:
@@ -9,84 +8,88 @@
     forward : {1 = forward, 0 = reverse}
     inputA : {1 = High, 0 = Low}
     inputB : {1 = High, 0 = Low}
+    velocity : {0 to maximum velocity (encoder difference)}
+    limit_state: {STANDARD, CAUGHT_MAX, LIMIT, SPIKE}
 */
 
-/*
-   These variables have nothing to do with the
-   json file other than the fact that they have the
-   same name, but these could have been named anything.
-   They are simply dummy variables for hibike to interface with.
-   The realization of the control is reflected in the arduino
-   code.
-*/
 uint32_t duty;
 uint32_t fault;
 uint32_t forward;
 uint32_t inputA;
 uint32_t inputB;
 
-int INA = 4;
-int INB = 7;
+volatile unsigned int velCounter = 0;
+volatile int velocity = 0;
+
+#define LIMITED 4 //how much we limit PWM by
+
+//CONDITIONS TO SWITCH STATES
+int current_threshold = 40; //threshold for duty cycle values, equates to about 3 amps when motor is stalled.
+
+int in_max = 0; //how many times we have been in the CAUGHT_MAX state
+#define EXIT_MAX 17000 //**FIXME** how many times we want to be in CAUGHT_MAX before moving onto LIMIT state
+int above_threshold = 0;
+
+int in_limit = 0; //how many times we have been in the LIMIT state
+#define EXIT_LIMIT 20000 //**FIXME** how many times we want to be in LIMIT before moving onto SPIKE state
+
+int in_spike = 0; //how many times we have been in the SPIKE state
+#define EXIT_SPIKE 5000 //**FIXME** how many times we want to be in SPIKE before moving onto either the STANDARD or LIMIT state
+int below_threshold = 0;
+
+//FSM STATES
+int limit_state = 0; //tells us which state the FSM is in and how we are modifying the PWM
+#define STANDARD 0 //normal state when pwm gets passed though
+#define CAUGHT_MAX 1 //alerted state where we are concerned about high current
+#define LIMIT 2 //high current for too long and PWM is now limited
+#define SPIKE 3 //checks to see if returning to full PWM is safe
+
+/* Pins according to TwistIt Board */
+int INA = 16;
+int INB = 10;
 int PWM = 9;
-int EN = IO4;
+int EN = 14;
+int CS = 8;
 
-// int IN_ENA = I08;
-// int IN_ENB = IO9;
-volatile unsigned int encoder0Pos = 0; 
-//might need to process or not make unsigned
+#define encoder0PinA  2
+#define encoder0PinB  3
+volatile unsigned int encoder0Pos = 0;
 
-// normal arduino setup function, you must call hibike_setup() here
 void setup() {
   hibike_setup();
+  pinMode(encoder0PinA, INPUT);
+  digitalWrite(encoder0PinA, HIGH);       // turn on pullup resistor
+  pinMode(encoder0PinB, INPUT);
+  digitalWrite(encoder0PinB, HIGH);       // turn on pullup resistor
+
   pinMode(INA, OUTPUT);
   pinMode(INB, OUTPUT);
   pinMode(PWM, OUTPUT);
-  // pinMode(IN_ENA, INPUT); 
-  // digitalWrite(IN_ENA, HIGH);
-  // pinMode(IN_ENB, INPUT); 
-  // digitalWrite(IN_ENB, HIGH);
+
+  pinMode(CS, INPUT);
+
   digitalWrite(INA, LOW);
   digitalWrite(INB, HIGH);
-  // attachInterrupt(0, doEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(encoder0PinA), doEncoder_Expanded, CHANGE);
+  Timer1.attachInterrupt(interrupt, 1000);
 }
 
-// normal arduino loop function, you must call hibike_loop() here
-// hibike_loop will look for any packets in the serial buffer and handle them
 void loop() {
   hibike_loop();
 }
 
-
-// you must implement this function. It is called when the device receives a DeviceUpdate packet.
-// the return value is the value field of the DeviceRespond packet hibike will respond with
-/* 
-    DUTY
-    EN/DIS
-    FORWARD/REVERSE
-    FAULT LINE
-
-    future:
-    ENCODER VALUES -library?
-    PID mode vs Open Loop modes; PID Arduino library
-    Current Sense - loop update Limit the PWM if above the current for current motor
-*/
 uint32_t device_update(uint8_t param, uint32_t value) {
-  // if (param < NUM_PARAMS) {
-  //     params[param] = value;
-  //     return params[param];
-  //   }
-  
   switch (param) {
 
     case DUTY:
       if ((value <= 100) && (value >= 0)) {
         duty = value;
-        int scaled255 = value * (255/100);
-        analogWrite(PWM, scaled255);
+        int PWM_val = value * (255/100);
+        analogWrite(PWM, PWM_val);
       }
       return duty;
       break;
-      
+
     case FORWARD:
       forward = 1;
       inputA = 0;
@@ -118,27 +121,30 @@ uint32_t device_update(uint8_t param, uint32_t value) {
   }
 }
 
-// you must implement this function. It is called when the device receives a DeviceStatus packet.
-// the return value is the value field of the DeviceRespond packet hibike will respond with
 uint32_t device_status(uint8_t param) {
-  // if (param < NUM_PARAMS) {
-  //   return params[param];
-  // }
   switch (param) {
     case DUTY:
       return duty;
       break;
-      
+
     case FAULT:
       return fault;
       break;
-      
+
     case FORWARD:
       return forward;
       break;
 
     case REVERSE:
       return !forward;
+      break;
+
+    case CURRLIMSTATE:
+      return limit_state;
+      break;
+
+    case VELOCITY:
+      return velocity;
       break;
   }
   return ~((uint32_t) 0);
@@ -147,7 +153,7 @@ uint32_t device_status(uint8_t param) {
 
 // you must implement this function. It is called with a buffer and a maximum buffer size.
 // The buffer should be filled with appropriate data for a DataUpdate packer, and the number of bytes
-// added to the buffer should be returned. 
+// added to the buffer should be returned.
 //
 // You can use the helper function append_buf.
 // append_buf copies the specified amount data into the dst buffer and increments the offset
@@ -195,7 +201,7 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
 
 // you must implement this function. It is called with a buffer and a maximum buffer size.
 // The buffer should be filled with appropriate data for a DataUpdate packer, and the number of bytes
-// added to the buffer should be returned. 
+// added to the buffer should be returned.
 //
 // You can use the helper function append_buf.
 // append_buf copies the specified amount data into the dst buffer and increments the offset
@@ -215,4 +221,119 @@ uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len) 
   }
   return 0;
 
+}
+
+void doEncoder_Expanded(){
+  if (digitalRead(encoder0PinA) == HIGH) {   // found a low-to-high on channel A
+    if (digitalRead(encoder0PinB) == LOW) {  // check channel B to see which way
+                                             // encoder is turning
+      encoder0Pos = encoder0Pos - 1;         // CCW
+    }
+    else {
+      encoder0Pos = encoder0Pos + 1;         // CW
+    }
+  }
+  else                                        // found a high-to-low on channel A
+  {
+    if (digitalRead(encoder0PinB) == LOW) {   // check channel B to see which way
+                                              // encoder is turning
+      encoder0Pos = encoder0Pos + 1;          // CW
+    }
+    else {
+      encoder0Pos = encoder0Pos - 1;          // CCW
+    }
+  }
+}
+
+void velocity(){
+  if (velCounter  == 1000){
+    velocity = encoder0Pos - old_encoder0Pos;
+    old_encoder0Pos = encoder0Pos; //calculate for the next velocity calc
+    velCounter = 0;
+  }
+  else {
+    velCounter += 1;
+  }
+}
+
+void velocity(){
+  if (velCounter  == 1000){
+    velocity = encoder0Pos - old_encoder0Pos;
+    old_encoder0Pos = encoder0Pos; //calculate for the next velocity calc
+    velCounter = 0;
+  }
+  else {
+    velCounter += 1;
+  }
+}
+
+void current_limiting() {
+  int targetPWM = duty;
+  int current_read = analogRead(current_pin);
+  if (targetPWM < 0) {
+    pwm_sign = -1;
+    targetPWM = targetPWM * -1;
+  } else {
+    pwm_sign = 1;
+  }
+
+  switch(limit_state) {
+    case STANDARD: //we allow the pwm to be passed through normally and check to see if the CURRENT ever spikes above the threshold
+      if (current_read > current_threshold) {
+        limit_state = CAUGHT_MAX;
+      } else {
+        if (above_threshold > 0) {
+          above_threshold--;
+        }
+      }
+      break;
+    case CAUGHT_MAX: //we have seen the max and we check to see if we are above max for EXIT_MAX consecutive cycles and then we go to LIMIT to protect the motor
+      if (in_max > EXIT_MAX) {
+        if(above_threshold >= EXIT_SPIKE / 2) {
+          above_threshold = 0;
+          limit_state = LIMIT;
+        } else {
+          limit_state = STANDARD;
+        }
+        in_max = 0;
+      }
+
+      if (current_read > current_threshold) {
+        above_threshold++;
+      }
+      in_max++;
+      break;
+    case LIMIT: //we limit the pwm to 0.25 the value and wait EXIT_LIMIT cycles before attempting to spike and check the current again
+      targetPWM = targetPWM / LIMITED;
+      if (in_limit > EXIT_LIMIT) {
+        in_limit = 0;
+        limit_state = SPIKE;
+      } else {
+        in_limit++;
+      }
+      break;
+    case SPIKE: //we bring the pwm back to the target for a brief amount of time and check to see if it can continue in standard or if we need to continue limiting
+      if (in_spike > EXIT_SPIKE) {
+        Serial.println(below_threshold);
+        if (below_threshold >= (EXIT_SPIKE/100)*99) {
+          limit_state = STANDARD;
+        } else {
+          limit_state = LIMIT;
+        }
+        below_threshold = 0;
+        in_spike = 0;
+      } else {
+        if (current_read < current_threshold) {
+          below_threshold++;
+        }
+        in_spike++;
+      }
+      break;
+  }
+  analogWrite(PWM, targetPWM * pwm_sign);
+}
+
+void interrupt(){
+  velocity();
+  current_limiting();
 }
