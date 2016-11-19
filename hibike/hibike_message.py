@@ -47,23 +47,6 @@ messageTypes = {
   "Error" :                0xFF
 }
 
-# Dictionary of device types: enumeration
-deviceTypes = {
-  "LimitSwitch"   :       0x00,
-  "LineFollower"  :       0x01,
-  "Potentiometer" :       0x02,
-  "Encoder"       :       0x03,
-  "BatteryBuzzer" :       0x04,
-  "TeamFlag"      :       0x05,
-  "YogiBear"      :       0x06,
-  "ServoControl"  :       0x07,
-  "LinearActuator":       0x08,
-  "ColorSensor"   :       0x09,
-  "DistanceSensor":       0x10,
-  "MetalDetector" :       0x11,
-  "ExampleDevice" :       0xFFFF
-}
-
 # Dictionary of error names : error codes
 errorCodes = {
   "UnexpectedDelimiter" : 0xFD,
@@ -136,7 +119,46 @@ def send(serial_conn, message):
   out_buf = bytearray([0x00, len(encoded)]) + encoded
   serial_conn.write(out_buf)
 
+def encode_params(device_id, params):
+  """ Encodes a list of params into a bitmask
+      Returns an int representing the bitmask of a set of parameters
 
+      device_id  - a device type id (not uid)
+      params     - a list of parameter names
+  """
+  paramNums = [paramMap[device_id][name][0] for name in params]
+  entries = [1 << num for num in paramNums]
+  mask = 0
+  for entry in entries:
+    mask = mask | entry
+  return mask
+
+def decode_params(device_id, params_bitmask):
+  """ Decodes a params bitmask 
+      Returns a list of names symbolizing the parameters encoded 
+
+      device_id      - a device type id (not uid)
+      params_bitmask - the set of parameters in binary form
+  """
+  converted_params = []
+  for param_count in range(16):
+     if (1 & (params_bitmask >> param_count) == 1):
+        converted_params.append(param_count)
+  named_params = []
+  for param in converted_params:
+     if param >= len(devices[device_id]["params"]):
+        break
+     named_params.append(devices[device_id]["params"][param]["name"])
+  return named_params
+
+def format_string(device_id, params):
+  paramT = [paramMap[device_id][name][1] for name in params]
+  values = [param[1] for param in params_and_values]
+
+  typeString = ''
+  for t in paramT:
+    typeString += paramTypes[t]
+  return typeString
 
 def make_ping():
   """ Makes and returns Ping message."""
@@ -155,12 +177,8 @@ def make_subscription_request(device_id, params, delay):
       delay     - the delay in milliseconds
       struct.pack('%sf' % len(floatlist), *floatlist)
   """
-  paramNums = [paramMap[device_id][name][0] for name in params]
-  entries = [1 << num for num in paramNums]
-  tot = 0
-  for i in range(len(entries)):
-    tot = tot ^ entries[i]
-  temp_payload = struct.pack('<HH', tot, delay)
+  params_bitmask = encode_params(device_id, params)
+  temp_payload = struct.pack('<HH', params_bitmask, delay)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionRequest"], payload)
   return message
@@ -177,13 +195,7 @@ def make_subscription_response(device_id, params, delay, uid):
       delay     - the delay in milliseconds
       uid       - the uid
   """
-  paramNums = [paramMap[device_id][name][0] for name in params]
-  entries = [1 << num for num in paramNums]
-  tot = 0
-
-  for i in range(len(entries)):
-      tot = tot ^ entries[i]
-  
+  params_bitmask = encode_params(device_id, params)
   device_type = getDeviceType(uid)
   year = getYear(uid)
   id_num = getID(uid)
@@ -202,32 +214,11 @@ def make_device_read(device_id, params):
       device_id - a device type id (not uid).
       params    - an iterable of param names
   """
-  paramNums = [paramMap[device_id][name][0] for name in params]
-  entries = [1 << num for num in paramNums]
-  tot = 0
-  for i in range(len(entries)):
-    tot = tot ^ entries[i]
-  temp_payload = struct.pack('<H', tot)
+  params_bitmask = encode_params(device_id, params)
+  temp_payload = struct.pack('<H', params_bitmask)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["DeviceRead"], payload)
   return message
-
-def decode_params(device_id, params):
-#     Decodes an inputted set of parameters that is in binary form   
-#     Returns a list of names symbolizing the parameters encoded 
-#
-#     device_id - a device type id (not uid)
-#     params    - the set of parameters in binary form
-  converted_params = []
-  for param_count in range(16):
-     if (1 & (params >> param_count) == 1):
-        converted_params.append(param_count)
-  named_params = []
-  for param in converted_params:
-     if param >= len(devices[device_id]["params"]):
-        break
-     named_params.append(devices[device_id]["params"][param]["name"])
-  return named_params
   
 def make_device_write(device_id, params_and_values):
   """ Makes and returns DeviceWrite message.
@@ -241,55 +232,14 @@ def make_device_write(device_id, params_and_values):
   """
   params_and_values = sorted(params_and_values, key=lambda x: paramMap[device_id][x[0]][0])
   params = [param[0] for param in params_and_values]
-  paramNums = [paramMap[device_id][name][0] for name in params]
-  paramT = [paramMap[device_id][name][1] for name in params]
+  params_bitmask = encode_params(device_id, params)
   values = [param[1] for param in params_and_values]
-  entries = [1 << num for num in paramNums]
 
-  tot = 0
-  for i in range(len(entries)):
-    tot = tot ^ entries[i]
-  typeString = '<H'
-  for t in paramT:
-    typeString += paramTypes[t]
-  temp_payload = struct.pack(typeString, tot, *values)
+  typeString = '<H' + format_string(device_id, params)
+  temp_payload = struct.pack(typeString, params_bitmask, *values)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["DeviceWrite"], payload)
   return message
-
-def old_decode_device_write(device_id, message):
-  messageID = message.getmessageID()
-  payload = message.getPayload()
-  messageT = "DeviceWrite"
-  paramB = bin(payload[0])
-  paramNames = decode_params(device_id, paramB)
-  paramT = [paramMap[device_id][name][1] for name in paramNames]
-  typeString = '<H'
-  for t in paramT:
-    typeString += paramTypes[t]
-  tot_values = struct.unpack(typeString, payload)
-  params_and_values = []
-  for i in range(len(paramNames)):
-    param_and_values.append((paramNames[i], tot_values[i+1]))
-  return params_and_values
-
-def decode_device_write(msg, device_id):
-  assert msg.getmessageID() == messageTypes["DeviceWrite"]
-  payload = msg.getPayload()
-  assert len(payload) >= 2
-  params,  =  struct.unpack("<H", payload[:2])
-  params = decode_params(device_id, params)
-  struct_format = "<"
-  for param in params:
-    struct_format += paramTypes[paramMap[device_id][param][1]]
-  values = struct.unpack(struct_format, payload[2:])
-  return list(zip(params, values))
-
-
-
-
-
-
 
 def make_device_data(device_id, params_and_values):
   """ Makes and returns DeviceData message.
@@ -302,21 +252,12 @@ def make_device_data(device_id, params_and_values):
       params_and_values - an iterable of param (name, value) tuples
   """
   params = [param_tuple[0] for param_tuple in params_and_values]
-  paramNums = [paramMap[device_id][name][0] for name in params]
-  entries = [1 << num for num in paramNums]
-
-  tot = 0
-  for i in range(len(entries)):
-    tot = tot ^ entries[i]
-  
-  paramT = [paramMap[device_id][name][1] for name in params]
+  params_bitmask = encode_params(device_id, params)
   values = [param_tuple[1] for param_tuple in params_and_values]
 
-  typeString = '<H'
-  for type in paramT:
-    typeString += paramTypes[type]
+  typeString = '<H' + format_string(device_id, params)
 	
-  temp_payload = struct.pack(typeString, tot, *values)
+  temp_payload = struct.pack(typeString, params_bitmask, *values)
   payload = bytearray(temp_payload)
 
   message = HibikeMessage(messageTypes["DeviceData"], payload)
@@ -338,15 +279,23 @@ def parse_subscription_response(msg):
   uid = (device_id << 72) | (year << 64) | ID
   return (params, delay, uid)
 
+def decode_device_write(msg, device_id):
+  assert msg.getmessageID() == messageTypes["DeviceWrite"]
+  payload = msg.getPayload()
+  assert len(payload) >= 2
+  params,  =  struct.unpack("<H", payload[:2])
+  params = decode_params(device_id, params)
+  struct_format = "<" + format_string(device_id, params)
+  values = struct.unpack(struct_format, payload[2:])
+  return list(zip(params, values))
+
 def parse_device_data(msg, device_id):
   assert msg.getmessageID() == messageTypes["DeviceData"]
   payload = msg.getPayload()
   assert len(payload) >= 2
   params,  =  struct.unpack("<H", payload[:2])
   params = decode_params(device_id, params)
-  struct_format = "<"
-  for param in params:
-    struct_format += paramTypes[paramMap[device_id][param][1]]
+  struct_format = "<" + format_string(device_id, params)
   values = struct.unpack(struct_format, payload[2:])
   return list(zip(params, values))
 
