@@ -142,7 +142,7 @@ def decode_params(device_id, params_bitmask):
   """
   converted_params = []
   for param_count in range(16):
-     if (1 & (params_bitmask >> param_count) == 1):
+     if (params_bitmask & (1 << param_count)) > 0:
         converted_params.append(param_count)
   named_params = []
   for param in converted_params:
