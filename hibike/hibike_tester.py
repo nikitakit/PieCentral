@@ -4,16 +4,12 @@ from multiprocessing import Process, Pipe, Queue
 class Hibike:
 
     def __init__(self):
-
         self.badThingsQueue = Queue()
         self.stateQueue     = Queue()
         self.pipeTochild, self.pipeFromChild = Pipe()
         self.hibike_process = Process(target=hibike_process.hibike_process, args=(self.badThingsQueue, self.stateQueue, self.pipeFromChild))
         self.hibike_process.daemon = True
         self.hibike_process.start()
-
-    def ready(self):
-        self.pipeTochild.send(["ready"])
 
     def enumerate(self):
         self.pipeTochild.send(["enumerate_all"])
