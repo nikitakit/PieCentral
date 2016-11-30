@@ -120,6 +120,23 @@ class DeviceReadThread(threading.Thread):
 #############
 
 if __name__ == "__main__":
+
+    # helper functions so we can spawn threads that try to
+    def set_interval_sequence(functions, sec):
+        def func_wrapper():
+            set_interval_sequence(functions[1:] + functions[:1], sec)
+            functions[0]()
+        t = threading.Timer(sec, func_wrapper)
+        t.start()
+        return t
+
+    def make_send_write(pipeToChild, uid, params_and_values):
+        def helper():
+            pipeToChild.send(["write_params", [uid, params_and_values]])
+        return helper
+
+
+
     pipeToChild, pipeFromChild = multiprocessing.Pipe()
     badThingsQueue = multiprocessing.Queue()
     stateQueue = multiprocessing.Queue()
