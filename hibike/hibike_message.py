@@ -153,7 +153,6 @@ def decode_params(device_id, params_bitmask):
 
 def format_string(device_id, params):
   paramT = [paramMap[device_id][name][1] for name in params]
-  values = [param[1] for param in params_and_values]
 
   typeString = ''
   for t in paramT:
@@ -199,7 +198,7 @@ def make_subscription_response(device_id, params, delay, uid):
   device_type = getDeviceType(uid)
   year = getYear(uid)
   id_num = getID(uid)
-  temp_payload = struct.pack("<HHHBQ", tot, delay, device_type, year, id_num)
+  temp_payload = struct.pack("<HHHBQ", params_bitmask, delay, device_type, year, id_num)
   payload = bytearray(temp_payload)
   message = HibikeMessage(messageTypes["SubscriptionResponse"], payload)
 

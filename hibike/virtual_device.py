@@ -26,7 +26,13 @@ port = args.port
 print(device, port)
 conn = serial.Serial(port, 115200)
 
-device_id = hm.deviceTypes[device]
+for device_num in hm.devices:
+    if hm.devices[device_num]["name"] == device:
+        device_id = device_num
+        break
+else:
+    raise RuntimeError("Invalid Device Name!!!")
+
 year = 1
 id = random.randint(0, 0xFFFFFFFFFFFFFFFF)
 delay = 0
@@ -34,16 +40,16 @@ updateTime = 0
 uid = (device_id << 72) | (year << 64) | id
 
 # Here, the parameters and values to be sent in device datas are set for each device type, the list of subscribed parameters is set to empty,
-if device_id in [hm.deviceTypes["LimitSwitch"]]: 
+if device == "LimitSwitch":
         subscribed_params = []
         params_and_values = [("switch0", True), ("switch1", True), ("switch2", False), ("switch3", False)]
-if device_id in [hm.deviceTypes["ServoControl"]]:
+if device == "ServoControl":
         subscribed_params = []
         params_and_values = [("servo0", 2), ("enable0", True), ("servo1", 0), ("enable1", True), ("servo2", 5), ("enable2", True), ("servo3", 3), ("enable3", False)]
-if device_id in [hm.deviceTypes["Potentiometer"]]:
+if device == "Potentiometer":
         subscribed_params = []
         params_and_values = [("pot0", 6.7), ("pot1", 5.5), ("pot2", 34.1), ("pot3", 0.15)]
-if device_id in [hm.deviceTypes["YogiBear"]]:
+if device == "YogiBear":
         subscribed_params = []
         params_and_values = [("duty", 20), ("forward", False)]
         
