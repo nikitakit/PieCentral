@@ -1,7 +1,5 @@
 #include "limit_switch.h"
 
-
-
 uint8_t pins[NUM_SWITCHES] = {IN_0, IN_1, IN_2, IN_3};
 
 void setup() {
@@ -18,17 +16,6 @@ void loop() {
   hibike_loop();
 }
 
-// you must implement this function. It is called when the device receives a DeviceUpdate packet.
-// the return value is the value field of the DeviceRespond packet hibike will respond with
-uint32_t device_update(uint8_t param, uint32_t value) {
-  return ~((uint32_t) 0);
-}
-
-// you must implement this function. It is called when the devie receives a DeviceStatus packet.
-// the return value is the value field of the DeviceRespond packet hibike will respond with
-uint32_t device_status(uint8_t param) {
-  return ~((uint32_t) 0);
-}
 
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
   return 0;
@@ -52,17 +39,3 @@ uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len) 
   return sizeof(uint8_t);
 
 }
-// uint8_t data_update(uint8_t* data_update_buf, size_t buf_len) {
-
-//   if (buf_len < sizeof(uint8_t) * NUM_SWITCHES) {
-//     return 0;
-//   }
-
-//   uint8_t *data = (uint8_t *) data_update_buf;
-//   // Read sensor
-//   for (int i = 0; i < NUM_SWITCHES; i++) {
-//       data[i] = 1 - digitalRead(pins[i]);  //what does this do
-//   }
-//   return sizeof(uint8_t) * NUM_SWITCHES;
-
-// }
