@@ -105,8 +105,11 @@ while (True):
             params_and_values[hm.paramMap[device_id][new_tuple[0]][0]] = new_tuple
 
         # Send the written data, make sure you only send data for readable parameters
-        for index in range(len(write_params)):
-            while not hm.paramMap[device_id][write_tuples[index][0]][2]:
+        index = 0 
+        while index < len(write_params):
+            if hm.paramMap[device_id][write_tuples[index][0]][2]:
+                index += 1
+            else:
                 del write_tuples[index]
         hm.send(conn, hm.make_device_data(device_id, write_tuples))
            
