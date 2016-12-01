@@ -56,7 +56,7 @@ while (True):
                                         data.append(data_tuple)
                         hm.send(conn, hm.make_device_data(device_id, data))
                         updateTime = time.time()
-                        print("Regular data update sent")
+                        print("Regular data update sent from %s" % device)
              
         msg = hm.read(conn)
         if not msg:

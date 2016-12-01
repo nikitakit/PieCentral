@@ -147,6 +147,7 @@ if __name__ == "__main__":
     pipeToChild.send(["enumerate_all", []])
     uids = set()
     while True:
+        print("waiting for command")
         command, args = stateQueue.get()
         if command == "device_subscribed":
             uid = args[0]

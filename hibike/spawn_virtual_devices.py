@@ -19,7 +19,8 @@ def get_virtual_ports():
 
 def spawn_device(device_type):
     p1, p2 = get_virtual_ports()
-    device = subprocess.Popen(shlex.split("python3.5 %s -d %s -p %s" % (os.path.join(os.path.dirname(__file__), "virtual_device.py"), device_type, p1)), stdout=subprocess.PIPE)
+    fname = os.path.join(os.path.dirname(__file__), "virtual_device.py")
+    device = subprocess.Popen(shlex.split("python3.5 %s -d %s -p %s" % (fname, device_type, p1)))
     popens.append(device)
     return p2
 
@@ -34,4 +35,4 @@ if __name__ == "__main__":
         devices = [spawn_device("LimitSwitch"), spawn_device("ServoControl")]
         device_file.write(" ".join(devices))
     while True:
-        time.sleep(1000)
+        time.sleep(1)
