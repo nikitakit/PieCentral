@@ -177,7 +177,7 @@ Device Type Enumeration:
 |         |                | 3            | cell2      | float      | yes   | no     |
 |         |                | 4            | cell3      | float      | yes   | no     |
 |         |                | 5            | total      | float      | yes   | no     |
-|         |                | 6            | callibrate | bool       | no    | yes    |
+|         |                | 6            | calibrate | bool       | no    | yes    |
 |  0x05   | TeamFlag       | 0            | mode       | bool       | yes   | yes    |
 |         |                | 1            | blue       | bool       | yes   | yes    |
 |         |                | 2            | yellow     | bool       | yes   | yes    |
