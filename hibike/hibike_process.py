@@ -28,10 +28,10 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
     instruction_queues = [queue.Queue() for _ in ports]
 
     # these threads receive instructions from the main thread and write to devices
-    write_threads = [DeviceWriteThread(ser, iq) for ser, iq in zip(serials, instruction_queues)]
+    write_threads = [threading.Thread(target=device_write_thread, args=(ser, iq)) for ser, iq in zip(serials, instruction_queues)]
 
     # these threads receive packets from devices and write to statequeue
-    read_threads = [DeviceReadThread(index, ser, iq, None, stateQueue) for index, (ser, iq) in enumerate(zip(serials, instruction_queues))]
+    read_threads = [threading.Thread(target=device_read_thread, args=(index, ser, iq, None, stateQueue)) for index, (ser, iq) in enumerate(zip(serials, instruction_queues))]
 
     print(ports)
 
@@ -60,61 +60,41 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
                 instruction_queues[uid_to_index[uid]].put(("read", args))            
 
 
-class DeviceWriteThread(threading.Thread):
+def device_write_thread(ser, queue):
+    while True:
+        instruction, args = queue.get()
 
-    def __init__(self, ser, instructionQueue):
-        self.ser = ser
-        self.queue = instructionQueue
-        super().__init__()
-
-    def run(self):
-        while True:
-            instruction, args = self.queue.get()
-
-            if instruction == "ping":
-                hm.send(self.ser, hm.make_ping())
-            elif instruction == "subscribe":
-                uid, delay, params = args
-                hm.send(self.ser, hm.make_subscription_request(hm.uid_to_device_id(uid), params, delay))
-            elif instruction == "read":
-                uid, params = args
-                hm.send(self.ser, hm.make_device_read(hm.uid_to_device_id(uid), params))
-            elif instruction == "write":
-                uid, params_and_values = args
-                hm.send(self.ser, hm.make_device_write(hm.uid_to_device_id(uid), params_and_values))
-            elif instruction == "die":
-                return
+        if instruction == "ping":
+            hm.send(ser, hm.make_ping())
+        elif instruction == "subscribe":
+            uid, delay, params = args
+            hm.send(ser, hm.make_subscription_request(hm.uid_to_device_id(uid), params, delay))
+        elif instruction == "read":
+            uid, params = args
+            hm.send(ser, hm.make_device_read(hm.uid_to_device_id(uid), params))
+        elif instruction == "write":
+            uid, params_and_values = args
+            hm.send(ser, hm.make_device_write(hm.uid_to_device_id(uid), params_and_values))
+        elif instruction == "die":
+            return
 
 
-class DeviceReadThread(threading.Thread):
-
-    def __init__(self, index, ser, instructionQueue, errorQueue, stateQueue):
-        self.index = index
-        self.ser = ser
-        self.instructionQueue = instructionQueue
-        self.errorQueue = errorQueue
-        self.stateQueue = stateQueue
-        self.delay = 0
-        self.params = []
-        self.uid = None
-
-        super().__init__()
-
-    def run(self):
-        while True:
-            packet = hm.blocking_read(self.ser)
-            message_type = packet.getmessageID()
-            if message_type == hm.messageTypes["SubscriptionResponse"]:
-                params, delay, uid = hm.parse_subscription_response(packet)
-                self.uid = uid
-                uid_to_index[uid] = self.index
-                self.stateQueue.put(("device_subscribed", [uid, delay, params]))
-            elif message_type == hm.messageTypes["DeviceData"]:
-                if self.uid is not None:
-                    params_and_values = hm.parse_device_data(packet, hm.uid_to_device_id(self.uid))
-                    self.stateQueue.put(("device_values", params_and_values))
-                else:
-                    print("[HIBIKE] Port %s received data before enumerating!!!" % self.ser.port)
+def device_read_thread(index, ser, instructionQueue, errorQueue, stateQueue):
+    uid = None
+    while True:
+        packet = hm.blocking_read(ser)
+        message_type = packet.getmessageID()
+        if message_type == hm.messageTypes["SubscriptionResponse"]:
+            params, delay, uid = hm.parse_subscription_response(packet)
+            uid = uid
+            uid_to_index[uid] = index
+            stateQueue.put(("device_subscribed", [uid, delay, params]))
+        elif message_type == hm.messageTypes["DeviceData"]:
+            if uid is not None:
+                params_and_values = hm.parse_device_data(packet, hm.uid_to_device_id(uid))
+                stateQueue.put(("device_values", params_and_values))
+            else:
+                print("[HIBIKE] Port %s received data before enumerating!!!" % ser.port)
 
 
 #############
@@ -123,7 +103,7 @@ class DeviceReadThread(threading.Thread):
 
 if __name__ == "__main__":
 
-    # helper functions so we can spawn threads that try to
+    # helper functions so we can spawn threads that try to read/write to hibike_devices periodically
     def set_interval_sequence(functions, sec):
         def func_wrapper():
             set_interval_sequence(functions[1:] + functions[:1], sec)
