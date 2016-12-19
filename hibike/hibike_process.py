@@ -86,7 +86,6 @@ def device_read_thread(index, ser, instructionQueue, errorQueue, stateQueue):
         message_type = packet.getmessageID()
         if message_type == hm.messageTypes["SubscriptionResponse"]:
             params, delay, uid = hm.parse_subscription_response(packet)
-            uid = uid
             uid_to_index[uid] = index
             stateQueue.put(("device_subscribed", [uid, delay, params]))
         elif message_type == hm.messageTypes["DeviceData"]:
