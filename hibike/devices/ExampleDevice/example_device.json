@@ -2,7 +2,7 @@
     "deviceID": "0xFFFF",
     "deviceName": "ExampleDevice",
     "dataFormat": {
-        "formatString": "<?BHIQ",
+        "formatString": "<?BBHIQQ",
         "parameters": [
             {
                 "scalingFactor": 1.0,
@@ -28,6 +28,11 @@
                 "scalingFactor": 0.25,
                 "machineName": "value4",
                 "humanName": "Example 4"
+            },
+            {
+                "scalingFactor": 0.25,
+                "machineName": "value5",
+                "humanName": "Example 5"
             }
         ]
     },
