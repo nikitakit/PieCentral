@@ -75,8 +75,6 @@ def device_write_thread(ser, queue):
         elif instruction == "write":
             uid, params_and_values = args
             hm.send(ser, hm.make_device_write(hm.uid_to_device_id(uid), params_and_values))
-        elif instruction == "die":
-            return
 
 
 def device_read_thread(index, ser, instructionQueue, errorQueue, stateQueue):
