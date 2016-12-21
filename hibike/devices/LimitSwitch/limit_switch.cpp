@@ -24,7 +24,7 @@ void loop() {
 //    data    -   value to write, in bytes TODO: What endian?
 //    len     -   number of bytes in data
 //
-///   return  -   size of bytes written on success; otherwise return 0
+//   return  -   size of bytes written on success; otherwise return 0
 
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
   return 0;

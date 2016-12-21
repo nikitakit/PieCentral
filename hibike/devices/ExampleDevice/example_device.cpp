@@ -1,7 +1,5 @@
 #include "example_device.h"
 
-// TODO: How are we using the params field in the json file?
-
 // each device is responsible for keeping track of it's own params
 uint8_t value0;
 uint8_t value1;
@@ -38,10 +36,10 @@ void loop() {
 // It is called when the device receives a Device Write packet.
 // Updates param to new value passed in data.
 //    param   -   Parameter index
-//    data    -   value to write, in bytes TODO: What endian?
+//    data    -   value to write, in little-endian bytes
 //    len     -   number of bytes in data
 //
-///   return  -   size of bytes written on success; otherwise return 0
+//   return  -   size of bytes written on success; otherwise return 0
 
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
   switch (param) {
@@ -80,9 +78,9 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
 // It is called when the device receives a Device Data Update packet.
 // Modifies data_update_buf to contain the parameter value.
 //    param           -   Parameter index
-//    data_update_buf -   buffer to return data in
-//    buf_len         -   Maximum length of the buffer? TODO: Clarify
-// TODO: Endianess? Currently both are little endian
+//    data_update_buf -   buffer to return data in, little-endian
+//    buf_len         -   Maximum length of the buffer
+//
 //    return          -   sizeof(param) on success; 0 otherwise
 
 uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len) {
