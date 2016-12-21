@@ -26,12 +26,4 @@ typedef enum {
 void setup();
 void loop();
 
-uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len);
-uint32_t device_write(uint8_t param, uint8_t* data, size_t len);
-
-
-// Utility functions
-uint64_t read_num_bytes(uint8_t* data, size_t num);
-void write_num_bytes(uint64_t data, uint8_t* data_buf, size_t num);
-
 #endif /* EX_DEVICE_H */
