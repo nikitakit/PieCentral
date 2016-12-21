@@ -101,7 +101,7 @@ uint8_t data_update(uint8_t* data_update_buf, size_t buf_len) {
   return offset;
 }
 
-uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len) {
+uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len) {
   if(MAX_PAYLOAD_SIZE - buf_len < sizeof(uint8_t)|| param>NUM_PINS*2 || param < 0){
     return 0;
   }

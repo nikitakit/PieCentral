@@ -81,7 +81,7 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
 //
 //    return          -   sizeof(param) on success; 0 otherwise
 
-uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len) {
+uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len) {
   switch (param) {
     case PARAM_BLUE:
       data_update_buf[0] = getLed(0);
