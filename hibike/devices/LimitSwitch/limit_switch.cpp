@@ -37,7 +37,7 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len){
 //    param           -   Parameter index
 //    data_update_buf -   buffer to return data in
 //    buf_len         -   Maximum length of the buffer? TODO: Clarify
-// TODO: Endianess? Currently both are little endian
+//
 //    return          -   sizeof(param) on success; 0 otherwise
 
 uint8_t device_data_update(int param, uint8_t* data_update_buf, size_t buf_len) {
