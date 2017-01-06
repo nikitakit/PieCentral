@@ -34,34 +34,38 @@ def runtime(testName=""):
   testMode = testName != ""
   maxIter = 3 if testMode else None
 
+  def nonTestMode_print(*args):
+    """Prints only if we are NOT in testMode"""
+    if not testMode:
+      print(args)
+
   badThingsQueue = multiprocessing.Queue()
   stateQueue = multiprocessing.Queue()
   spawnProcess = processFactory(badThingsQueue, stateQueue)
   restartCount = 0
   emergency_stopped = False
+
   try:
     spawnProcess(PROCESS_NAMES.STATE_MANAGER, startStateManager)
     spawnProcess(PROCESS_NAMES.UDP_SEND_PROCESS, startUDPSender)
     spawnProcess(PROCESS_NAMES.UDP_RECEIVE_PROCESS, startUDPReceiver)
     spawnProcess(PROCESS_NAMES.HIBIKE, startHibike)
     while True:
-      if not testMode:
-        if restartCount >= 3:
-          print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-          print("Too many restarts, terminating")
-          break
-        if emergency_stopped:
-          print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-          print("terminating due to E-Stop")
-          break
-        print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-        print("Starting studentCode attempt: %s" % (restartCount,))
+      if restartCount >= 3:
+        nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+        nonTestMode_print("Too many restarts, terminating")
+        break
+      if emergency_stopped:
+        nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+        nonTestMode_print("terminating due to E-Stop")
+        break
+      nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+      nonTestMode_print("Starting studentCode attempt: %s" % (restartCount,))
       spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode, testName, maxIter)
       while True:
         newBadThing = badThingsQueue.get(block=True)
         print(newBadThing.event)
-        if not testMode:
-          print(newBadThing.data)
+        nonTestMode_print(newBadThing.data)
         if newBadThing.event in restartEvents:
           if (not emergency_stopped and newBadThing.event is BAD_EVENTS.EMERGENCY_STOP):
             emergency_stopped = True #somehow kill student code using other method? right now just restarting on e-stop
@@ -69,8 +73,7 @@ def runtime(testName=""):
       stateQueue.put([SM_COMMANDS.RESET, []])
       terminate_process(PROCESS_NAMES.STUDENT_CODE)
       restartCount += 1
-    if not testMode:
-      print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+    nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
     print("Funtime Runtime is done having fun.")
     print("TERMINATING")
   except Exception as e:
@@ -200,6 +203,8 @@ def runtimeTest(testNames):
   for testName in testNames:
     testFileName = "%s_output" % (testName,)
     with open(testFileName, "w", buffering = 1) as testOutput:
+      print("Running test: {}".format(testName), end="")
+      sys.stdout.flush()
       sys.stdout = testOutput
 
       allProcesses.clear()
@@ -210,6 +215,8 @@ def runtimeTest(testNames):
       terminate_process(PROCESS_NAMES.UDP_SEND_PROCESS)
       terminate_process(PROCESS_NAMES.UDP_RECEIVE_PROCESS)
 
+      sys.stdout = sys.__stdout__
+      print("{}DONE!".format(" "*(50-len(testName))))
     if not testSuccess(testFileName):
       # Explicitly set output to terminal, since we overwrote it earlier
       failCount += 1
