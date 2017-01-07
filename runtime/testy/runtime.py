@@ -50,7 +50,15 @@ def runtime(testName=""):
     spawnProcess(PROCESS_NAMES.UDP_SEND_PROCESS, startUDPSender)
     spawnProcess(PROCESS_NAMES.UDP_RECEIVE_PROCESS, startUDPReceiver)
     spawnProcess(PROCESS_NAMES.HIBIKE, startHibike)
+    controlState = "idle"
+
     while True:
+      if testMode:
+        # Automatically enter telop mode when running tests
+        badThingsQueue.put(BadThing(sys.exc_info(),
+              "Sending initial command to enter teleop",
+              event = BAD_EVENTS.ENTER_TELEOP,
+              printStackTrace=False))
       if restartCount >= 3:
         nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
         nonTestMode_print("Too many restarts, terminating")
@@ -61,9 +69,18 @@ def runtime(testName=""):
         break
       nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
       nonTestMode_print("Starting studentCode attempt: %s" % (restartCount,))
-      spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode, testName, maxIter)
       while True:
         newBadThing = badThingsQueue.get(block=True)
+        if newBadThing.event == BAD_EVENTS.ENTER_TELEOP and controlState != "teleop":
+          spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode, testName, maxIter)
+          controlState = "teleop"
+          continue
+        elif newBadThing.event == BAD_EVENTS.ENTER_AUTO and controlState != "auto":
+          # spawnProcess(autonomous code)
+          controlState = "auto"
+          continue
+        elif newBadThing.event == BAD_EVENTS.ENTER_IDLE and controlState != "idle":
+          break
         print(newBadThing.event)
         nonTestMode_print(newBadThing.data)
         if newBadThing.event in restartEvents:
@@ -72,6 +89,7 @@ def runtime(testName=""):
           break
       stateQueue.put([SM_COMMANDS.RESET, []])
       terminate_process(PROCESS_NAMES.STUDENT_CODE)
+      controlState = "idle"
       restartCount += 1
     nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
     print("Funtime Runtime is done having fun.")
