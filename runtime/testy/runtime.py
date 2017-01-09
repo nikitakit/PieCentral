@@ -34,7 +34,7 @@ def runtime(testName=""):
   testMode = testName != ""
   maxIter = 3 if testMode else None
 
-  def nonTestMode_print(*args):
+  def nonTestModePrint(*args):
     """Prints only if we are NOT in testMode"""
     if not testMode:
       print(args)
@@ -60,15 +60,15 @@ def runtime(testName=""):
               event = BAD_EVENTS.ENTER_TELEOP,
               printStackTrace=False))
       if restartCount >= 3:
-        nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-        nonTestMode_print("Too many restarts, terminating")
+        nonTestModePrint(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+        nonTestModePrint("Too many restarts, terminating")
         break
       if emergency_stopped:
-        nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-        nonTestMode_print("terminating due to E-Stop")
+        nonTestModePrint(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+        nonTestModePrint("terminating due to E-Stop")
         break
-      nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
-      nonTestMode_print("Starting studentCode attempt: %s" % (restartCount,))
+      nonTestModePrint(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+      nonTestModePrint("Starting studentCode attempt: %s" % (restartCount,))
       while True:
         newBadThing = badThingsQueue.get(block=True)
         if newBadThing.event == BAD_EVENTS.ENTER_TELEOP and controlState != "teleop":
@@ -82,7 +82,7 @@ def runtime(testName=""):
         elif newBadThing.event == BAD_EVENTS.ENTER_IDLE and controlState != "idle":
           break
         print(newBadThing.event)
-        nonTestMode_print(newBadThing.data)
+        nonTestModePrint(newBadThing.data)
         if newBadThing.event in restartEvents:
           if (not emergency_stopped and newBadThing.event is BAD_EVENTS.EMERGENCY_STOP):
             emergency_stopped = True #somehow kill student code using other method? right now just restarting on e-stop
@@ -91,7 +91,7 @@ def runtime(testName=""):
       terminate_process(PROCESS_NAMES.STUDENT_CODE)
       controlState = "idle"
       restartCount += 1
-    nonTestMode_print(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
+    nonTestModePrint(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
     print("Funtime Runtime is done having fun.")
     print("TERMINATING")
   except Exception as e:
