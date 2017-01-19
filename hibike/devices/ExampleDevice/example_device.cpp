@@ -44,27 +44,27 @@ void loop() {
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
   switch (param) {
     case VALUE_0:
-      value0 = (uint8_t) read_num_bytes(data, len);
+      value0 = (uint8_t) read_num_bytes(data, sizeof(value0));
       return sizeof(value0);
       break;
     case VALUE_1:
-      value1 = (uint8_t) read_num_bytes(data, len);
+      value1 = (uint8_t) read_num_bytes(data, sizeof(value1));
       return sizeof(value1);
       break;
     case VALUE_2:
-      value2 = (uint16_t) read_num_bytes(data, len);
+      value2 = (uint16_t) read_num_bytes(data, sizeof(value2));
       return sizeof(value2);
       break;
     case VALUE_3:
-      value3 = (uint32_t) read_num_bytes(data, len);
+      value3 = (uint32_t) read_num_bytes(data, sizeof(value3));
       return sizeof(value3);
       break;
     case VALUE_4:
-      value4 = (uint64_t) read_num_bytes(data, len);
+      value4 = (uint64_t) read_num_bytes(data, sizeof(value4));
       return sizeof(value4);
       break;
     case VALUE_5:
-      value5 = (uint64_t) read_num_bytes(data, len);
+      value5 = (uint64_t) read_num_bytes(data, sizeof(value5));
       return sizeof(value5);
       break;
     default:
