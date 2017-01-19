@@ -22,7 +22,7 @@ FC sends out messages to initiate robot-to-driver-station pairing and robot mode
 
 The FC network will have up to eight clients, as follows:
 
-- One FC client.  This is the FC computer running the match.  A wifi-enabled PiE computer+monitor. 
+- One FC client.  This is the FC computer running the match.  A PiE computer+monitor. 
 - Four driver station clients.  This acts as the student-robot interface (via Dawn and Runtime), and as the robot-field control interface (see "Establishing Communication Links").  A wifi-enabled laptop or  computer+monitor.
 - Up to four robot clients.  A wifi-enabled Beagle Bone Black (via wifi dongle).  One per student robot.
 
@@ -60,6 +60,8 @@ Within each match, the FC network will create/maintain eight TCP connections:
 - A connection between the FC client and each Driver Station client.  These can persist across matches, and so need to be opened only once per network initialization.
 - A connection beween a Driver Station client and its corresponding Robot client. These must be opened/closed at the start/end of each match (i.e. once the Robot client joins/leaves the FC network and is paired/unpaired with a Driver Station client).
 
+If a FC-to-Driver-Station connection is dropped, FC is responsible for reestablishing the connection.  If a Driver-Station-to-Robot connection is dropped, the Driver Station notifies FC; FC then re-sends the pairing message to said Driver Station (see "Sending Messages").
+
 ## 5. Sending Messages
 
 The FC client sends messages to initiate robot-to-driver-station pairing, and to indicate what mode (autonomous, tele-op, etc) the robot is in.   Driver station clients listen accordingly, and pass the message to robots.
@@ -71,6 +73,8 @@ In further detail:
 ### From FC
 
 **Robot-to-Driver-Station Pairing.**  Prior to this message, a robot, while connected to the network, is not yet associated with a driver station.  Containing the static IP of the Robot client with which to pair, the FC client sends this to the Driver Station client, which then opens a connection and begins communication with said robot.
+
+If more than one robot responds to the pairing message (i.e. IP address collision), or if no robot responds, FC is notified by the Driver Station.  The match will not proceed until this is externally resolved (e.g. reprogramming the suspected robot(s)'s Beaglebones).
 
 **Mode Changing.**  This message contains an integer indicating whether the robot should be in Autonomous (1), Tele-Op (2), Disabled (3), or E-Stopped (4) mode.  Sent from FC to Driver Station, then Driver Station to Robot.
 
