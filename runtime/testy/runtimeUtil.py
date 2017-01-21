@@ -106,3 +106,6 @@ class StudentAPIKeyError(StudentAPIError):
 
 class TimeoutError(Exception):
   pass
+
+class RuntimeError(Exception):
+  pass
