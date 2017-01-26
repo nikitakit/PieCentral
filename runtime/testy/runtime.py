@@ -162,8 +162,7 @@ def runStudentCode(badThingsQueue, stateQueue, pipe, testName = "", maxIter = No
         await asyncio.sleep(sleep_time)
 
       badThingsQueue.put(BadThing(sys.exc_info(), "Process Ended", event=BAD_EVENTS.END_EVENT))
-      if exception_cell[0] is not None:
-        raise exception_cell[0]
+      raise exception_cell[0]
 
     loop = asyncio.get_event_loop()
 
@@ -173,18 +172,6 @@ def runStudentCode(badThingsQueue, stateQueue, pipe, testName = "", maxIter = No
 
     loop.set_exception_handler(my_exception_handler)
     loop.run_until_complete(main_loop())
-
-    # TODO: Replace execCount with a value in stateManager
-    # execCount = 0
-    # while (not terminated) and (maxIter is None or execCount < maxIter):
-    #   checkTimedOut(mainFunc)
-    #   nextCall = time.time()
-    #   nextCall += 1.0/RUNTIME_CONFIG.STUDENT_CODE_HZ.value
-    #   stateQueue.put([SM_COMMANDS.STUDENT_MAIN_OK, []])
-    #   time.sleep(max(nextCall - time.time(), 0))
-    #   execCount += 1
-
-    # badThingsQueue.put(BadThing(sys.exc_info(), "Process Ended", event=BAD_EVENTS.END_EVENT))
 
   except TimeoutError:
     badThingsQueue.put(BadThing(sys.exc_info(), None, event=BAD_EVENTS.STUDENT_CODE_TIMEOUT))
