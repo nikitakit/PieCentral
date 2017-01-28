@@ -47,10 +47,10 @@ def runtime(testName=""):
 
   try:
     spawnProcess(PROCESS_NAMES.STATE_MANAGER, startStateManager)
-    spawnProcess(PROCESS_NAMES.UDP_SEND_PROCESS, startUDPSender)
     spawnProcess(PROCESS_NAMES.UDP_RECEIVE_PROCESS, startUDPReceiver)
     spawnProcess(PROCESS_NAMES.HIBIKE, startHibike)
     controlState = "idle"
+    connectionState = False
 
     while True:
       if testMode:
@@ -71,7 +71,17 @@ def runtime(testName=""):
       nonTestModePrint("Starting studentCode attempt: %s" % (restartCount,))
       while True:
         newBadThing = badThingsQueue.get(block=True)
-        if newBadThing.event == BAD_EVENTS.ENTER_TELEOP and controlState != "teleop":
+        if newBadThing.event == BAD_EVENTS.NEW_IP and not connectionState:
+          spawnProcess(PROCESS_NAMES.UDP_SEND_PROCESS, startUDPSender)
+          #spawnProcess(TCP)
+          connectionState = True
+          continue
+        elif newBadThing.event == BAD_EVENTS.DAWN_DISCONNECTED and connectionState:
+          terminate_process(PROCESS_NAMES.UDP_SEND_PROCESS)
+          #terminate_process(tcp)
+          connectionState = False
+          continue
+        elif newBadThing.event == BAD_EVENTS.ENTER_TELEOP and controlState != "teleop":
           spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode, testName, maxIter)
           controlState = "teleop"
           continue

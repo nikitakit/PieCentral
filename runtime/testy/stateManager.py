@@ -32,7 +32,9 @@ class StateManager(object):
       SM_COMMANDS.RECV_ANSIBLE: self.recv_ansible,
       SM_COMMANDS.GET_TIME : self.getTimestamp,
       SM_COMMANDS.EMERGENCY_STOP: self.emergencyStop,
-      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart
+      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart,
+      SM_COMMANDS.SET_IP: self.set_ip,
+      SM_COMMANDS.SEND_IP: self.send_ip
     }
     return commandMapping
 
@@ -65,7 +67,8 @@ class StateManager(object):
      "list1" : [[[70, t], ["five", t], [14.3, t]], t],
      "string1" : ["abcde", t],
      "runtime_meta" : [{"studentCode_main_count" : [0, t], "e_stopped" : [False, t]}, t],
-     "hibike" : [{"device_subscribed" : [0, t]}, t]
+     "hibike" : [{"device_subscribed" : [0, t]}, t], 
+     "ip" : [None, t]
     }
 
   def addPipe(self, processName, pipe):
@@ -129,6 +132,12 @@ class StateManager(object):
 
   def recv_ansible(self, new_data):
     self.state.update(new_data)
+
+  def set_ip(self, new_ip):
+    self.state["ip"] = [new_ip, time.time()]
+
+  def send_ip(self, process_name):
+    self.processMapping[process_name].send(self.state["ip"][0])
 
   def getTimestamp(self, keys):
     currDict = self.state

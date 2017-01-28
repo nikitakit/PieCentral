@@ -77,6 +77,7 @@ class UDPSendClass(AnsibleHandler):
         self.sendBuffer = TwoBuffer()
         packagerName = THREAD_NAMES.UDP_PACKAGER
         sockSendName = THREAD_NAMES.UDP_SENDER
+        self.dawn_ip = None
         super().__init__(packagerName, UDPSendClass.packageData, sockSendName,
                          UDPSendClass.udpSender, badThingsQueue, stateQueue, pipe)
 
@@ -111,6 +112,8 @@ class UDPSendClass(AnsibleHandler):
                     "UDP packager thread has crashed with error:" + str(e),
                     event = BAD_EVENTS.UDP_SEND_ERROR,
                     printStackTrace = True))
+        stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.UDP_SEND_PROCESS]])
+        self.dawn_ip = pipe.recv()
         while True:
             try:
                 nextCall = time.time()
@@ -132,14 +135,13 @@ class UDPSendClass(AnsibleHandler):
         The current state that has already been packaged is gotten from the 
         TwoBuffer, and is sent to Dawn via a UDP socket.
         """
-        host = '192.168.128.30' #TODO: Make this not hard coded
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             while True: 
                 try:
                     nextCall = time.time()
                     msg = self.sendBuffer.get()
-                    if msg != 0 and msg is not None: 
-                        s.sendto(msg, (host, UDPSendClass.SEND_PORT))
+                    if msg != 0 and msg is not None and self.dawn_ip is not None: 
+                        s.sendto(msg, (self.dawn_ip, UDPSendClass.SEND_PORT))
                     nextCall += 1.0/self.socketHZ
                     time.sleep(max(nextCall - time.time(), 0))
                 except Exception as e:
@@ -159,6 +161,7 @@ class UDPRecvClass(AnsibleHandler):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((host, UDPRecvClass.RECV_PORT))
         self.socket.setblocking(False)
+        self.curr_ip = None
         super().__init__(packName, UDPRecvClass.unpackageData, sockRecvName,
                          UDPRecvClass.udpReceiver, badThingsQueue, stateQueue, pipe)
 
@@ -170,9 +173,12 @@ class UDPRecvClass(AnsibleHandler):
         """
         try:
             while True:
-                recv_data = self.socket.recv(2048)
+                recv_data, addr = self.socket.recvfrom(2048)
         except BlockingIOError:
             self.recvBuffer.replace(recv_data)
+            if addr is not self.curr_ip:
+                self.curr_ip = addr
+                self.stateQueue.put([SM_COMMANDS.SET_IP, [addr]])
 
     def unpackageData(self):
         """Unpackages data from proto and sends to stateManager on the SM stateQueue
