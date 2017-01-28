@@ -18,8 +18,8 @@ void setup() {
 // hibike_loop will look for any packets in the serial buffer and handle them
 void loop() {
   // //look for new cards
-  mfrc522.PICC_IsNewCardPresent();
-  if(mfrc522.PICC_ReadCardSerial()) {
+  
+  if(mfrc522.PICC_ReadCardSerial() || mfrc522.PICC_IsNewCardPresent()) {
   	params2[0] = *((uint32_t*)mfrc522.uid.uidByte);
   } else {
     params2[0] = 0;
