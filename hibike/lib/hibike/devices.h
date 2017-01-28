@@ -12,6 +12,7 @@ typedef enum {
   COLOR_SENSOR = 0x09,
   DISTANCE_SENSOR = 0x10,
   METAL_DETECTOR = 0x11,
+  RFID = 0x12,
   EXAMPLE_DEVICE = 0xFFFF
 } deviceID;
 

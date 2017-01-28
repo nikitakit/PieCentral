@@ -67,6 +67,11 @@
                                                      ]
     },
 
+    {"id": 18,     "name": "RFID",          "params": [
+                                                          {"number": 0  , "name": "uid"       , "type": "uint32_t", "read": true , "write": false}
+                                                     ]
+
+    },
     {"id": 65535, "name": "ExampleDevice", "params": [    
                                                           {"number": 0  , "name": "kumiko"     , "type": "bool"    , "read": true , "write": true  },
                                                           {"number": 1  , "name": "hazuki"     , "type": "uint8_t" , "read": true , "write": true  },
@@ -86,4 +91,5 @@
                                                           {"number": 15 , "name": "noboru"     , "type": "float"   , "read": true , "write": false }
                                                      ]
     }
+
 ]

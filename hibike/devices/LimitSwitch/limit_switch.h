@@ -6,7 +6,7 @@
 //////////////// DEVICE UID ///////////////////
 hibike_uid_t UID = {
   LIMIT_SWITCH,                      // Device Type
-  0,                                 // Year
+  1,                                 // Year
   UID_RANDOM,                        // ID
 };
 ///////////////////////////////////////////////

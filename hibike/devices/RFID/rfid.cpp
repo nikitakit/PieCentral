@@ -3,7 +3,7 @@
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
 
 // each device is responsible for keeping track of it's own params
-uint32_t params[NUM_PARAMS];
+uint32_t params2[NUM_PARAMS];
 
 // normal arduino setup function, you must call hibike_setup() here
 void setup() {
@@ -11,22 +11,19 @@ void setup() {
     // Setup sensor input
   SPI.begin();
   mfrc522.PCD_Init();
-  mfrc522.PCD_DumpVersionToSerial();
+  // mfrc522.PCD_DumpVersionToSerial();
 }
 
 // normal arduino loop function, you must call hibike_loop() here
 // hibike_loop will look for any packets in the serial buffer and handle them
 void loop() {
-  //look for new cards
-  if( ! mfrc522.PICC_IsNewCardPresent()){
-  	return;
+  // //look for new cards
+  mfrc522.PICC_IsNewCardPresent();
+  if(mfrc522.PICC_ReadCardSerial()) {
+  	params2[0] = *((uint32_t*)mfrc522.uid.uidByte);
+  } else {
+    params2[0] = 0;
   }
-  //select one of the cards
-  if(!mfrc522.PICC_ReadCardSerial()){
-  	return;
-  }
-
-  params[0] = &((uint32_t*)mfrc522.uid.uidByte);
 
   hibike_loop();
 }
@@ -47,7 +44,7 @@ uint32_t device_update(uint8_t param, uint32_t value) {
 // the return value is the value field of the DeviceRespond packet hibike will respond with
 uint32_t device_status(uint8_t param) {
   if (param < NUM_PARAMS) {
-    return params[param];
+    return params2[param];
   }
   return ~((uint32_t) 0);
 }
@@ -66,6 +63,7 @@ uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_l
   if(MAX_PAYLOAD_SIZE - buf_len < sizeof(uint32_t)|| param!=0){
     return 0;
   }
-  data_update_buf[0] = &((uint8_t)params[0]);//casting fun
+  uint32_t* data = (uint32_t*) data_update_buf;
+  data[0] = params2[0];//casting fun
   return sizeof(uint32_t);
 }
