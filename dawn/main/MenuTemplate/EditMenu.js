@@ -2,6 +2,8 @@
  * Defines the edit menu.
  */
 
+import RendererBridge from '../RendererBridge';
+
 const EditMenu = {
   label: 'Edit',
   submenu: [
@@ -19,6 +21,12 @@ const EditMenu = {
       label: 'Paste',
       accelerator: 'CommandOrControl+V',
       role: 'paste',
+    },
+    {
+      label: 'Preferences',
+      click() {
+        RendererBridge.registeredWindow.webContents.send('open-preferences');
+      },
     },
   ],
 };

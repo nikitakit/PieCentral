@@ -1,6 +1,7 @@
 import React from 'react';
 import Joyride from 'react-joyride';
 import Dashboard from './Dashboard';
+import PreferencesBox from './PreferencesBox';
 import joyrideSteps from './JoyrideSteps';
 import smalltalk from 'smalltalk';
 import { removeAsyncAlert } from '../actions/AlertActions';
@@ -13,18 +14,26 @@ class AppComponent extends React.Component {
     super(props);
     this.state = {
       steps: [],
+      showPreferencesModal: false,
     };
     this.addSteps = this.addSteps.bind(this);
     this.addTooltip = this.addTooltip.bind(this);
     this.startTour = this.startTour.bind(this);
     this.completeCallback = this.completeCallback.bind(this);
     this.updateAlert = this.updateAlert.bind(this);
+    this.openModal = this.openModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
   }
 
   componentDidMount() {
     this.addSteps(joyrideSteps);
     ipcRenderer.on('start-interactive-tour', () => {
       this.startTour();
+    });
+    ipcRenderer.on('open-preferences', () => {
+      if (!this.state.showModal) {
+        this.openModal();
+      }
     });
     storage.has('firstTime').then((hasKey) => {
       if (!hasKey) {
@@ -45,6 +54,14 @@ class AppComponent extends React.Component {
         this.updateAlert(latestAlert);
       }
     }
+  }
+
+  closeModal() {
+    this.setState({ showPreferencesModal: false });
+  }
+
+  openModal() {
+    this.setState({ showPreferencesModal: true });
   }
 
   addSteps(steps) {
@@ -105,6 +122,10 @@ class AppComponent extends React.Component {
           connectionStatus={this.props.connectionStatus}
           runtimeStatus={this.props.runtimeStatus}
           isRunningCode={this.props.isRunningCode}
+        />
+        <PreferencesBox
+          showModal={this.state.showPreferencesModal}
+          closeModal={this.closeModal}
         />
       </div>
     );
