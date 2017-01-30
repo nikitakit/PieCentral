@@ -17,9 +17,13 @@ app.on('window-all-closed', () => {
 app.on('ready', () => {
   mainWindow = new BrowserWindow();
   fieldControlWindow = new BrowserWindow({
-    width: 500,
-    height: 500,
+    width: 300,
+    height: 200,
+    transparent: true,
+    frame: false,
+    parent: mainWindow,
   });
+  fieldControlWindow.setHasShadow(false);
 
   // connects to window's redux state and dispatcher
   RendererBridge.registerWindow(mainWindow);
@@ -30,8 +34,13 @@ app.on('ready', () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    fieldControlWindow = null;
   });
 
   const menu = Menu.buildFromTemplate(Template);
   Menu.setApplicationMenu(menu);
+
+  /* setInterval(() => {
+    fieldControlWindow.setAlwaysOnTop(true);
+  }, 1); */
 });
