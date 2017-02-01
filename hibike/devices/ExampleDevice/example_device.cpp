@@ -17,6 +17,7 @@ void setup() {
 
 // normal arduino loop function, you must call hibike_loop() here
 // hibike_loop will look for any packets in the serial buffer and handle them
+// hibike_loop will call device_write and device_data_update
 
 void loop() {
   // do whatever you want here
@@ -33,13 +34,13 @@ void loop() {
 
 
 // You must implement this function.
-// It is called when the device receives a Device Write packet.
+// It is called when the device receives a Device Write packet from the BBB.
 // Updates param to new value passed in data.
 //    param   -   Parameter index
 //    data    -   value to write, in little-endian bytes
 //    len     -   number of bytes in data
 //
-//   return  -   size of bytes written on success; otherwise return 0
+//   return  -   number of bytes read from data on success; otherwise return 0
 
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
   switch (param) {
@@ -75,13 +76,13 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
 
 
 // You must implement this function.
-// It is called when the device receives a Device Data Update packet.
+// It is called when the device wants to send data to the BBB.
 // Modifies data_update_buf to contain the parameter value.
 //    param           -   Parameter index
 //    data_update_buf -   buffer to return data in, little-endian
 //    buf_len         -   Maximum length of the buffer
 //
-//    return          -   sizeof(param) on success; 0 otherwise
+//    return          -   number of bytes writted to data_update_buf on success; 0 otherwise
 
 uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len) {
   switch (param) {
