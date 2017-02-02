@@ -62,32 +62,34 @@ void measure_cells() //measures the battery cells. Should call at least twice a 
 
     v_batt = v_cell3;
 
-    if(prints)
-    {    
-      String str_cell1 = String(v_cell1, 3);
-      String str_cell2 = String(v_cell2, 3);
-      String str_cell3 = String(v_cell3, 3);
+    // if(prints)
+    // {
+    //   String str_cell1 = String(v_cell1, 3);
+    //   String str_cell2 = String(v_cell2, 3);
+    //   String str_cell3 = String(v_cell3, 3);
   
   
   
-      String sdv_cell2 = String(dv_cell2, 3);
-      String sdv_cell3 = String(dv_cell3, 3);
+    //   String sdv_cell2 = String(dv_cell2, 3);
+    //   String sdv_cell3 = String(dv_cell3, 3);
   
 
-      if(triple_calibration)
-      {
-        Serial.println("Triple Calibration Mode");
-      }
-      else
-      {
-        Serial.println("Single Calibration Mode");
-      }
+    //   if(triple_calibration)
+    //   {
+    //     Serial.println("Triple Calibration Mode");
+    //   }
+    //   else
+    //   {
+    //     Serial.println("Single Calibration Mode");
+    //   }
   
-      Serial.println("ABS: Cell1 : " + str_cell1 + " Cell2 : " + str_cell2 + " Cell3 : " + str_cell3);
-      Serial.println("REL: Cell1: " + str_cell1 + " Cell2 : " + sdv_cell2 + " Cell3 : " + sdv_cell3);
-      Serial.println("");
-      Serial.println("");
-    }
+    //   Serial.println("ABS: Cell1 : " + str_cell1 + " Cell2 : " + str_cell2 + " Cell3 : " + str_cell3);
+    //   Serial.println("REL: Cell1: " + str_cell1 + " Cell2 : " + sdv_cell2 + " Cell3 : " + sdv_cell3);
+    //   Serial.println("");
+    //   Serial.println("");
+
+
+    // }
     last_print_time = millis();
 
 }

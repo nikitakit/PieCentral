@@ -1,9 +1,10 @@
 //has code that determines if the battery is safe or not, and takes appropriate action.
 //this code is regularly called (currently every 250ms)
+unsafe_status = false;
 
 float min_cell = 3.3;
 float end_undervolt = 3.6; //I have to exceed this value to remove my undervolt condition.  (Aka if loading conditions momentarily spiked the battery...)
-bool  under_volt = false; //if i undervolt, i'll have to keep track if i'm no longer in an undervolt condition to avoid momentary beeps.
+bool under_volt = false; //if i undervolt, i'll have to keep track if i'm no longer in an undervolt condition to avoid momentary beeps.
 
 
 float max_cell = 4.4;
@@ -17,8 +18,8 @@ bool imbalance = false;
 
 void handle_safety()
 {
-   bool unsafe_status = is_unsafe(); //Currently, just does basic sensing.  Should get updated.
-   buzz(unsafe_status);
+  unsafe_status = is_unsafe(); //Currently, just does basic sensing.  Should get updated.
+  buzz(unsafe_status);
   
 }
 
