@@ -25,7 +25,7 @@ class Robot:
         raise message
     return
 
-  def getValue(self, key, *args):
+  def _getSMValue(self, key, *args):
     """Returns the value associated with key
     """
     self.toManager.put([SM_COMMANDS.GET_VAL, [[key] + list(args)]])

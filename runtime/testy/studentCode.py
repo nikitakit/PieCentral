@@ -17,7 +17,7 @@ def mainTest_setup():
   pass
 
 def mainTest_main():
-  response = Robot.getValue("incrementer")
+  response = Robot._getSMValue("incrementer")
   print("Get Info:", response)
   response -= 1
 
@@ -31,30 +31,30 @@ def nestedDict_setup():
 
 def nestedDict_main():
   print("CODE LOOP")
-  response = Robot.getValue("dict1", "inner_dict1_int")
+  response = Robot._getSMValue("dict1", "inner_dict1_int")
   print("Get Info:", response)
 
   response = 1
   Robot.setValue(response, "dict1", "inner_dict1_int")
-  response = Robot.getValue("dict1", "inner_dict1_int")
+  response = Robot._getSMValue("dict1", "inner_dict1_int")
   print("Get Info2:", response)
 
 def studentCodeMainCount_setup():
   pass
 
 def studentCodeMainCount_main():
-  print(Robot.getValue("runtime_meta", "studentCode_main_count"))
+  print(Robot._getSMValue("runtime_meta", "studentCode_main_count"))
 
 def createKey_setup():
   Robot.createKey("Restarts")
   Robot.setValue(0, "Restarts")
-  if Robot.getValue("Restarts") != 0:
+  if Robot._getSMValue("Restarts") != 0:
     print("Either getValue or setValue is not working correctly")
   pass
 
 def createKey_main():
   Robot.createKey("Restarts")
-  if Robot.getValue("Restarts") == 0:
+  if Robot._getSMValue("Restarts") == 0:
     try:
       print("Making sure setValue can't create new key")
       Robot.setValue(707, "Klefki")
@@ -72,7 +72,7 @@ def createKey_main():
   Robot.createKey("Mankey", "EVOLUTION")
   Robot.setValue("Primeape", "Mankey", "EVOLUTION")
   print("Success!")
-  restarts = Robot.getValue("Restarts")
+  restarts = Robot._getSMValue("Restarts")
   Robot.setValue(restarts+1, "Restarts")
 
 def hibikeSubscribeDevice_setup():
@@ -81,7 +81,7 @@ def hibikeSubscribeDevice_setup():
 def hibikeSubscribeDevice_main():
   Robot._hibikeSubscribeDevice(1, 2, [3, 4])
   time.sleep(.01) # Wait for command to propogate to Hibike
-  print(Robot.getValue("hibike", "device_subscribed"))
+  print(Robot._getSMValue("hibike", "device_subscribed"))
 
 def timestamp_setup():
   pass
@@ -131,7 +131,7 @@ def emergencyStop_setup():
 
 
 def emergencyStop_main():
-  response = Robot.getValue("incrementer")
+  response = Robot._getSMValue("incrementer")
   response -= 1
   if(response < 0):
     Robot.emergencyStop()
