@@ -77,9 +77,10 @@ class UDPSendClass(AnsibleHandler):
         self.sendBuffer = TwoBuffer()
         packagerName = THREAD_NAMES.UDP_PACKAGER
         sockSendName = THREAD_NAMES.UDP_SENDER
-        self.dawn_ip = None
         super().__init__(packagerName, UDPSendClass.packageData, sockSendName,
                          UDPSendClass.udpSender, badThingsQueue, stateQueue, pipe)
+        stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.UDP_SEND_PROCESS]])
+        self.dawn_ip = pipe.recv()
 
     def packageData(self, badThingsQueue, stateQueue, pipe):
         """Function run as a thread that packages data to be sent.
@@ -112,8 +113,6 @@ class UDPSendClass(AnsibleHandler):
                     "UDP packager thread has crashed with error:" + str(e),
                     event = BAD_EVENTS.UDP_SEND_ERROR,
                     printStackTrace = True))
-        stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.UDP_SEND_PROCESS]])
-        self.dawn_ip = pipe.recv()
         while True:
             try:
                 nextCall = time.time()
@@ -176,7 +175,7 @@ class UDPRecvClass(AnsibleHandler):
                 recv_data, addr = self.socket.recvfrom(2048)
         except BlockingIOError:
             self.recvBuffer.replace(recv_data)
-            if addr is not self.curr_ip:
+            if self.curr_ip is None:
                 self.curr_ip = addr
                 self.stateQueue.put([SM_COMMANDS.SET_IP, [addr]])
 
