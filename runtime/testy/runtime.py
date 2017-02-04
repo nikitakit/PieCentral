@@ -73,7 +73,7 @@ def runtime(testName=""):
         newBadThing = badThingsQueue.get(block=True)
         if newBadThing.event == BAD_EVENTS.NEW_IP and not connectionState:
           spawnProcess(PROCESS_NAMES.UDP_SEND_PROCESS, startUDPSender)
-          #spawnProcess(TCP)
+          spawnProcess(PROCESS_NAMES.TCP_PROCESS, startTCP)
           connectionState = True
           continue
         elif newBadThing.event == BAD_EVENTS.DAWN_DISCONNECTED and connectionState:
@@ -183,6 +183,13 @@ def startUDPReceiver(badThingsQueue, stateQueue, smPipe):
     recvClass.start()
   except Exception as e:
     badThingsQueue.put(BadThing(sys.exc_info(), str(e), event=BAD_EVENTS.UDP_RECV_ERROR))
+
+def startTCP(badThingsQueue, stateQueue, smPipe):
+  try:
+    recvClass = Ansible.TCPClass(badThingsQueue, stateQueue, smPipe)
+    recvClass.start()
+  except Exception as e:
+    badThingsQueue.put(BadThing(sys.exc_info(), str(e), event=BAD_EVENTS.TCP_ERROR))
 
 def processFactory(badThingsQueue, stateQueue, stdoutRedirect = None):
   def spawnProcessHelper(processName, helper, *args):

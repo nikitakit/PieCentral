@@ -15,6 +15,7 @@ class BAD_EVENTS(Enum):
   END_EVENT                 = "Process terminated" # Used for testing
   UDP_SEND_ERROR            = "UDPSend Process Crashed"
   UDP_RECV_ERROR            = "UDPRecv Process Crashed"
+  TCP_ERROR                 = "TCP Process Crashed"
   ENTER_TELEOP              = "Dawn says enter Teleop" # TODO: BAD_EVENT best way to do this?
   ENTER_AUTO                = "Dawn says enter Auto" # TODO: BAD_EVENT best way to do this?
   ENTER_IDLE                = "Dawn says enter Idle" # TODO: BAD_EVENT best way to do this?
@@ -31,6 +32,7 @@ class PROCESS_NAMES(Enum):
   UDP_SEND_PROCESS    = "udpSendProcess"
   UDP_RECEIVE_PROCESS = "udpReceiveProcess"
   HIBIKE              = "hibike"
+  TCP_PROCESS         = "tcpProcess"
 
 @unique
 class HIBIKE_COMMANDS(Enum):

@@ -14,6 +14,10 @@ class THREAD_NAMES(Enum):
     UDP_SENDER          = "udpSender"
     UDP_RECEIVER        = "udpReceiver"
     UDP_UNPACKAGER      = "udpUnpackager"
+    TCP_PACKAGER        = "tcpPackager"
+    TCP_SENDER          = "tcpSender"
+    TCP_RECEIVER        = "tcpReceiver"
+    TCP_UNPACKAGER      = "tcpUnpackager"
 
 class TwoBuffer():
     """Custom buffer class for handling states.
@@ -235,3 +239,35 @@ class UDPRecvClass(AnsibleHandler):
             "UDP receiver thread has crashed with error: " + str(e),
             event = BAD_EVENTS.UDP_RECV_ERROR,
             printStackTrace = True))
+
+class TCPClass(AnsibleHandler):
+    PORT = 1234
+
+    def __init__(self, badThingsQueue, stateQueue, pipe):
+        self.sendBuffer = TwoBuffer()
+        self.recvBuffer = TwoBuffer()
+        sendName = THREAD_NAMES.TCP_SENDER
+        recvName = THREAD_NAMES.TCP_RECEIVER
+        super().__init__(sendNAme, TCPClass.sender, recvName, TCPClass.receiver, badThingsQueue, stateQueue, pipe)
+        stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.TCP_PROCESS]])
+        self.dawn_ip = pipe.recv()
+
+        #connect to dawn via TCP
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.dawn_ip, TCPClass.PORT))
+
+    def sender(self, badThingsQueue, stateQueue, pipe):
+        return 
+
+    def receiver(self, badThingsQueue, stateQueue, pipe):
+        try:
+            while True:
+                recv_data, addr = s.recv(2048)
+
+
+
+
+
+
+
+
