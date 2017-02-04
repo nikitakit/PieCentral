@@ -65,6 +65,7 @@ class SM_COMMANDS(Enum):
   GET_TIME            = ()
   EMERGENCY_STOP      = ()
   EMERGENCY_RESTART   = ()
+  DISABLE             = ()
 
 class RUNTIME_CONFIG(Enum):
   STUDENT_CODE_TIMELIMIT      = 1

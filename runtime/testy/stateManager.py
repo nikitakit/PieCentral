@@ -32,7 +32,8 @@ class StateManager(object):
       SM_COMMANDS.RECV_ANSIBLE: self.recv_ansible,
       SM_COMMANDS.GET_TIME : self.getTimestamp,
       SM_COMMANDS.EMERGENCY_STOP: self.emergencyStop,
-      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart
+      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart,
+      SM_COMMANDS.DISABLE: self.disableDevice
     }
     return commandMapping
 
@@ -140,6 +141,13 @@ class StateManager(object):
     except:
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+
+  def disableDevice(self, uid):
+    device_type = getValue('hibike', uid, 'device_type')
+    if device_type is Servo:
+      # TODO disable servo
+    elif device_type is Motor:
+      # TODO set motor to 0
 
   def studentCodeTick(self):
     self.state["runtime_meta"][0]["studentCode_main_count"][0] += 1

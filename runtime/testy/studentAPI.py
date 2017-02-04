@@ -8,6 +8,20 @@ class Robot:
     self.toManager = toManager
     self._createSensorMapping()
 
+  def get_value(self, device_name):
+    uid = _hibikeGetUID(device_name)
+    return self._getSMValue('hibike', uid)
+
+  def set_value(self, device_name, value):
+    uid = _hibikeGetUID(device_name)
+    # TODO: Throw ValueError for bad values
+    # TODO: verify that this correctly sends values to Hibike
+    return self._setSMValue(value, 'hibike', uid)
+
+  def disable(self, device_name):
+    uid = _hibikeGetUID(device_name)
+    self.toManager.put([SM_COMMANDS.DISABLE, [uid]])
+
   def _createSensorMapping(self, filename = 'namedPeripherals.csv'):
     self.sensorMappings = {}
     with open(filename, 'r') as f:
@@ -34,7 +48,7 @@ class Robot:
         raise message
     return message
 
-  def setValue(self, value, key, *args):
+  def _setSMValue(self, value, key, *args):
     """Sets the value associated with key
     """
     #statemanager passes exception, then check to see if returned value is exception or not
@@ -62,7 +76,7 @@ class Robot:
     if name in self.sensorMappings:
         return self.sensorMappings[name]
     else:
-        return None
+        raise StudentAPIKeyError()
 
   def emergencyStop(self):
     self.toManager.put([SM_COMMANDS.EMERGENCY_STOP, []])
