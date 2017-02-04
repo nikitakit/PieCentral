@@ -23,8 +23,6 @@ sudo service apache2 stop
 sudo systemctl disable apache2
 sudo systemctl daemon-reload
 
-sudo apt-mark hold connman
-
 alias sudo='sudo -H'
 
 # Install apt packages

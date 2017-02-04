@@ -21,15 +21,9 @@ fi
 mkdir -p $TMP_DIR
 echo "Done."
 
-
 git pull origin master
-<<<<<<< HEAD
+protoc $PROTO_DIR/runtime.proto --python_out=$RUNTIME_PROTO
 
-protoc PROTO_DIR/runtime.proto --python_out=RUNTIME_PROTO
-
-
-=======
->>>>>>> d3830b575389ba7d7b040c492c105e04b216b61a
 # Copy hibike and runtime
 cp -R $(git rev-parse --show-toplevel)/hibike $TMP_DIR/hibike
 cp -R $(git rev-parse --show-toplevel)/runtime $TMP_DIR/runtime
