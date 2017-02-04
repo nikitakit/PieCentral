@@ -33,6 +33,7 @@ app.on('ready', () => {
   fieldControlWindow.loadURL(`file://${__dirname}/../static/indexFC.html`);
 
   mainWindow.on('closed', () => {
+    console.log(Template[3].submenu[2].kill()); // Find Less Hacky way to kill Fake Runtimes.
     mainWindow = null;
     fieldControlWindow = null;
   });
