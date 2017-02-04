@@ -32,11 +32,14 @@ class PROCESS_NAMES(Enum):
 
 @unique
 class HIBIKE_COMMANDS(Enum):
-  ENUMERATE = "enumerate_all"
-  SUBSCRIBE = "subscribe_device"
-  WRITE     = "write_params"
-  READ      = "read_params"
-  E_STOP    = "stop_command"
+  ENUMERATE   = "enumerate_all"
+  SUBSCRIBE   = "subscribe_device"
+  WRITE       = "write_params"
+  READ        = "read_params"
+  E_STOP      = "stop_command"
+  SET_VAL     = "set_value"
+  DISABLE     = "disable_device"
+  SMART_WRITE = "smart_write"
 
 # TODO: Remove when Hibike is finished
 @unique
@@ -65,7 +68,6 @@ class SM_COMMANDS(Enum):
   GET_TIME            = ()
   EMERGENCY_STOP      = ()
   EMERGENCY_RESTART   = ()
-  DISABLE             = ()
 
 class RUNTIME_CONFIG(Enum):
   STUDENT_CODE_TIMELIMIT      = 1
@@ -103,6 +105,12 @@ class StudentAPIError(Exception):
   pass
 
 class StudentAPIKeyError(StudentAPIError):
+  pass
+
+class StudentAPIValueError(StudentAPIError):
+  pass
+
+class StudentAPITypeError(StudentAPIError):
   pass
 
 class TimeoutError(Exception):

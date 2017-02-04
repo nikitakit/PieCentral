@@ -14,13 +14,23 @@ class Robot:
 
   def set_value(self, device_name, value):
     uid = _hibikeGetUID(device_name)
-    # TODO: Throw ValueError for bad values
     # TODO: verify that this correctly sends values to Hibike
-    return self._setSMValue(value, 'hibike', uid)
+    self.toManager.put([HIBIKE_COMMANDS.SET_VAL, [uid, value]]) #should list be nested?
+    message = self.fromManager.recv()
+    if isinstance(message, StudentAPIKeyError):
+        raise message
+    return message
 
   def disable(self, device_name):
     uid = _hibikeGetUID(device_name)
-    self.toManager.put([SM_COMMANDS.DISABLE, [uid]])
+    self.toManager.put([HIBIKE_COMMANDS.DISABLE, [uid]]) #should list be nested?
+    message = self.fromManager.recv()
+    if isinstance(message, StudentAPITypeError):
+        raise message
+    return message
+
+  def set_coast(self, device_name, coast_enabled):
+    pass
 
   def _createSensorMapping(self, filename = 'namedPeripherals.csv'):
     self.sensorMappings = {}
@@ -51,7 +61,7 @@ class Robot:
   def _setSMValue(self, value, key, *args):
     """Sets the value associated with key
     """
-    #statemanager passes exception, then check to see if returned value is exception or not
+    #statemanager returns value, then method checks to see whether exception
     self.toManager.put([SM_COMMANDS.SET_VAL, [value, [key] + list(args)]])
     message = self.fromManager.recv()
     if isinstance(message, StudentAPIKeyError):

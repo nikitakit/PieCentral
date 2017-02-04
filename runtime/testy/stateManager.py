@@ -32,8 +32,7 @@ class StateManager(object):
       SM_COMMANDS.RECV_ANSIBLE: self.recv_ansible,
       SM_COMMANDS.GET_TIME : self.getTimestamp,
       SM_COMMANDS.EMERGENCY_STOP: self.emergencyStop,
-      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart,
-      SM_COMMANDS.DISABLE: self.disableDevice
+      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart
     }
     return commandMapping
 
@@ -43,7 +42,10 @@ class StateManager(object):
       HIBIKE_COMMANDS.SUBSCRIBE: self.hibikeSubscribeDevice,
       HIBIKE_COMMANDS.READ: self.hibikeReadParams,
       HIBIKE_COMMANDS.WRITE: self.hibikeWriteParams,
-      HIBIKE_COMMANDS.E_STOP: self.hibikeEmergencyStop
+      HIBIKE_COMMANDS.E_STOP: self.hibikeEmergencyStop,
+      HIBIKE_COMMANDS.SET_VAL: self.hibikeSetValue,
+      HIBIKE_COMMANDS.DISBLE: self.hibikeDisable,
+      HIBIKE_COMMANDS.SMART_WRITE:, self.hibikeSmartWrite
     }
     return hibikeMapping
 
@@ -125,6 +127,47 @@ class StateManager(object):
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, currDict))
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
 
+  def hibikeDisable(self, pipe, uid):
+    device_type = self.getValue([['hibike'] + [uid] + ['device_type']])
+    if device_type is Servo: # TODO: determine field to disable servo
+      self.hibikeSmartWrite(pipe, uid, [('disabled', True)]) #hibikeSetValue will respond to student code
+    elif device_type is Motor: #TODO: determine motor speed field
+      self.hibikeSmartWrite(pipe, uid, [('speed', 0)]) #hibikeSetValue will respond to student code
+    elif device_type is Sensor:
+      error = StudentAPITypeError("Cannot disable", device_type)
+      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+
+  def hibikeSmartWrite(self, pipe, uid, param_values): #checks if valid device before writing
+    keys = [['hibike'] + [uid]] #correct formatting for keys?
+    result = self.state
+    try:
+      for i, key in enumerate(keys):
+        result = result[key][0]
+      self.hibikeWriteParams(pipe, uid, param_values)
+      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(result) #returns thing that was updated
+    except:
+      error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
+      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+
+  def hibikeSetValue(self, pipe, uid, value): #checks type, then writes to default field
+    device_type = self.getValue([['hibike'] + [uid] + ['device_type']])
+    if device_type is Servo: # TODO: determine field for angle of servo
+      #TODO: reenable servo if disabled
+      if value >= 0 and value <= 180:
+        self.hibikeSmartWrite(pipe, uid, [('angle', value)]) #hibikeSmartWrite will respond to student code
+      else:
+        error = StudentAPIValueError("Value for servo must be between 0 and 180")
+        self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+    elif device_type is Motor: #TODO: determine motor speed field
+      if abs(value) <= 1:
+        self.hibikeSmartWrite(pipe, uid, [('speed', value)]) #hibikeSmartWrite will respond to student code
+      else:
+        error = StudentAPIValueError("Value for motor must be between -1 and 1")
+        self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+    else: #can only set servo and motors currently
+      error = StudentAPITypeError("Cannot set value to ", device_type)
+      self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
+
   def send_ansible(self):
     self.processMapping[PROCESS_NAMES.UDP_SEND_PROCESS].send(self.state)
 
@@ -141,13 +184,6 @@ class StateManager(object):
     except:
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
-
-  def disableDevice(self, uid):
-    device_type = getValue('hibike', uid, 'device_type')
-    if device_type is Servo:
-      # TODO disable servo
-    elif device_type is Motor:
-      # TODO set motor to 0
 
   def studentCodeTick(self):
     self.state["runtime_meta"][0]["studentCode_main_count"][0] += 1
