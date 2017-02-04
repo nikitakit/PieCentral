@@ -23,9 +23,13 @@ sudo service apache2 stop
 sudo systemctl disable apache2
 sudo systemctl daemon-reload
 
+sudo apt-mark hold connman
+
+alias sudo='sudo -H'
+
 # Install apt packages
 sudo apt update -y && sudo apt upgrade -y
-sudo apt install -y man-db make build-essential gcc git vim tmux htop curl memcached libevent-dev unzip systemd systemd-sysv
+sudo apt install -y man-db make build-essential gcc git vim tmux htop curl memcached libevent-dev unzip systemd systemd-sysv linux-headers-$(uname -r)
 sudo apt install -y python3 python3-dev python3-pip  # Python dependencies
 sudo apt clean -y
 sudo apt autoremove -y
@@ -38,7 +42,6 @@ cd $HOME
 git clone https://github.com/xtknight/mt7610u-linksys-ae6000-wifi-fixes.git drivers
 cd drivers
 make clean
-sudo apt install linux-headers-$(uname -r)
 make
 sudo make install
 echo 'mt7610u_sta' | sudo tee --append /etc/modules
@@ -56,20 +59,26 @@ mkdir -p $HOME/updates
 cp $FRANKFURTER_DIR/resources/update.sh $HOME/bin/
 
 mkdir -p $HOME/bin
-cp PieCentral/DevOps/frankfurter/resources/mac.py $HOME/bin/
+cp $FRANKFURTER_DIR/resources/mac.py $HOME/bin/
 
 mkdir -p $HOME/studentcode
 
-chmod +x $HOME/bin/*
-
 # copy .conf files into /etc/init so that hibike/dawn/runtime start on boot
 sudo cp $FRANKFURTER_DIR/resources/memcached.conf /etc
-sudo cp $FRANKFURTER_DIR/resources/runtime.sh $HOME/bin/
+cp $FRANKFURTER_DIR/resources/runtime.sh $HOME/bin/
 sudo cp $FRANKFURTER_DIR/resources/runtime.service /lib/systemd/system
 sudo chmod 644 /lib/systemd/system/runtime.service
 sudo systemctl daemon-reload && sudo systemctl enable runtime.service
+sudo systemctl start runtime.service
+
+sudo chown ubuntu $HOME/bin/*
+sudo chgrp ubuntu $HOME/bin/*
+sudo chmod +x $HOME/bin/*
 
 # copy config files for grizzlies, memcached, and network interfaces
 sudo cp $FRANKFURTER_DIR/resources/interfaces /etc/network/interfaces
 
 echo 'export PYTHONPATH="${PYTHONPATH}:/home/ubuntu/PieCentral/hibike"' >> $HOME/.bashrc  # .profile?
+
+sudo /sbin/route delete default gw 192.168.7.1
+sudo systemctl restart networking.service
