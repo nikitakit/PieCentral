@@ -2,26 +2,26 @@
 
 // each device is responsible for keeping track of it's own params
 
-buzzer = 10;
+int buzzer = 10;
 
-last_print_time = 0; //for the loop counter...
+unsigned long last_print_time = 0; //for the loop counter...
 
 
-triple_calibration = true; //decide whether to use triple calibration or the simpler single calibration.
+bool triple_calibration = true; //decide whether to use triple calibration or the simpler single calibration.
 
 float vref_guess = 2.56;  //initial guess, based on datasheet.
-calib[] = {2.56,2.56,2.56}; //initial guess, based on datasheet.
+float calib[] = [2.56,2.56,2.56]; //initial guess, based on datasheet.
 
 
 //got to keep these globals here to keep the compiler happy.
-v_cell1;  // param 1
-v_cell2;  // param 2
-v_cell3;  // param 3
-v_batt;   // param 4
-dv_cell2; // param 5
-dv_cell3; // param 6
+float v_cell1;  // param 1
+float v_cell2;  // param 2
+float v_cell3;  // param 3
+float v_batt;   // param 4
+float dv_cell2; // param 5
+float dv_cell3; // param 6
 
-bool print = false // keep until all Serial methods get deleted
+bool print = false; // keep until all Serial methods get deleted
 
 
 // normal arduino setup function, you must call hibike_setup() here
@@ -68,6 +68,7 @@ void loop() {
 
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
   //trigger calibration
+  return 0;
 
 }
 
@@ -88,29 +89,29 @@ uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_l
       return sizeof(uint8_t);
     }
   }
-  if (MAX_PAYLOAD_SIZE - buf_len < sizeof(float) || param<0 || param >= 7){
-    return 0
+  if (MAX_PAYLOAD_SIZE - buf_len < sizeof(float) || param >= 7){
+    return 0;
   }
-  float_buf = (float *) data_update_buf;
+  float* float_buf = (float *) data_update_buf;
   if(param == 1){
-    float_buf[0] = v_cell1
+    float_buf[0] = v_cell1;
   }
-  else if(){
-
+  else if(param == 2){
+    float_buf[0] = v_cell2;
   }
-  else if(){
-
+  else if(param == 3){
+    float_buf[0] = v_cell3;
   }
-  else if(){
-
+  else if(param == 4){
+    float_buf[0] = v_batt;
   }
-  else if(){
-
+  else if(param == 5){
+    float_buf[0] = dv_cell2;
   }
-  else if(){
-
+  else if(param == 6){
+    float_buf[0] = dv_cell3;
   }
 
-  data_update_buf[0] = (uint8_t*) float_buf;
+  data_update_buf = (uint8_t*) float_buf;
   return sizeof(float);
 }

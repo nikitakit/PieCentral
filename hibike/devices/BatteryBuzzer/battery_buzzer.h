@@ -11,9 +11,9 @@ extern bool print;
 
 extern float calib[];
 extern bool triple_calibration;
-extern int buzzer = 10;
+extern int buzzer;
 
-extern unsigned long last_print_time = 0;
+extern unsigned long last_print_time;
 
 #include "hibike_device.h"
 #include "eeprom.h" //implement

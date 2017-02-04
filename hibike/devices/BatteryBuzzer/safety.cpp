@@ -1,6 +1,8 @@
+#include "safety.h"
+
 //has code that determines if the battery is safe or not, and takes appropriate action.
 //this code is regularly called (currently every 250ms)
-unsafe_status = false;
+bool unsafe_status = false;
 
 float min_cell = 3.3;
 float end_undervolt = 3.6; //I have to exceed this value to remove my undervolt condition.  (Aka if loading conditions momentarily spiked the battery...)

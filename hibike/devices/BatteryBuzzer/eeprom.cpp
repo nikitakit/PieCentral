@@ -1,4 +1,6 @@
 
+#include "eeprom.h"
+
 //low-level functions that deal with storing the calibration values using the agreed upon format.
 
 float get_calibration()  //returns calibration voltage.  Returns -1 (float) if no calibration.

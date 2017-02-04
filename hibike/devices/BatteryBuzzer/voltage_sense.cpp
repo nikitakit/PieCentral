@@ -1,3 +1,5 @@
+#include "voltage_sense.h"
+
 //code that deals with measuring cell voltages.
 //also deals with calibration.
 

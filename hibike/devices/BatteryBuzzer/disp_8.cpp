@@ -1,7 +1,7 @@
 //code that deals with displaying the data to the outside world.
 
 #include <SevenSeg.h>
-
+#include "disp_8.h"
 
 //Segment Pins, A toG then decimal pt.
 SevenSeg disp(8,9,7,2,0,15,14);
