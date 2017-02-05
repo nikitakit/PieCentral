@@ -28,37 +28,37 @@ void handle_safety()
 bool is_unsafe() //returns if i'm safe or not based on the most recent reading.
 //Currently does only over and under voltage protection.  No time averaging.  So will need to be fancier later.
 {
-  bool is_unsafe;
+  bool unsafe;
   if( (v_cell1 < min_cell ) || (dv_cell2 < min_cell) || (dv_cell3 < min_cell) ) //minimum cell voltages
   {
-    is_unsafe = true;
+    unsafe = true;
     under_volt = true;
   }
   else if( (v_cell1 > max_cell ) || (dv_cell2 > max_cell) || (dv_cell3 > max_cell) ) //maximum cell voltages.
   {
-    is_unsafe = true;
+    unsafe = true;
   }
   else if( (abs(v_cell1 - dv_cell2) > d_cell) || (abs(dv_cell2 - dv_cell3) > d_cell) || (abs(dv_cell3 - v_cell1) > d_cell) ) //imbalance.
   {
     imbalance = true;
-    is_unsafe = true;
+    unsafe = true;
   }
   else if(under_volt && (v_cell1 > end_undervolt ) && (dv_cell2 > end_undervolt) && (dv_cell3 > end_undervolt) ) //i was undervolted but i'm now over the exit threshold.  This has the effect of rejecting momentary dips under the undevolt threshold (say, loading effects) but continuing to be unsafe if i'm hoving close (say, random oscliations)
   {
-    is_unsafe = false;
+    unsafe = false;
     under_volt = false;
   }
   else if(imbalance && (abs(v_cell1 - dv_cell2) < end_d_cell) && (abs(dv_cell2 - dv_cell3) < end_d_cell) && (abs(dv_cell3 - v_cell1) < end_d_cell) ) //imbalance. //i was undervolted but i'm now over the exit threshold.  This has the effect of rejecting momentary dips under the undevolt threshold (say, loading effects) but continuing to be unsafe if i'm hoving close (say, random oscliations)
   {
-    is_unsafe = false;
+    unsafe = false;
     imbalance = false;
   }
   else
   {
-    is_unsafe = false;
+    unsafe = false;
   }
   
-  return is_unsafe;
+  return unsafe;
 }
 
 

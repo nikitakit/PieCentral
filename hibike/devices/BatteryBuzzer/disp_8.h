@@ -3,9 +3,10 @@
 
 #include "battery_buzzer.h"
 
+void start_8_seg_sequence(int sequence_num);
+
 void handle_8_segment();
 
-void start_8_seg_sequence(int sequence_num);
 
 void setup_display();
 

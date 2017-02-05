@@ -187,22 +187,22 @@ float calibrate() //calibrates the device.
     //avg all vrefs together to get best guess value    
     vref_guess = (vref1 + vref2 + vref3) / float(3);
     
-    if(prints)
-    {
-      if(triple_calibration)
-      {
-        Serial.print("vref1 :");
-        Serial.println(vref1);
-        Serial.print("vref2 :");
-        Serial.println(vref2);
-        Serial.print("vref3 :");
-        Serial.println(vref3);
-      }
-      else
-      {
-        Serial.println("Vref Guess is " + String(vref_guess, 4));
-      }
-    }
+    // if(prints)
+    // {
+    //   if(triple_calibration)
+    //   {
+    //     Serial.print("vref1 :");
+    //     Serial.println(vref1);
+    //     Serial.print("vref2 :");
+    //     Serial.println(vref2);
+    //     Serial.print("vref3 :");
+    //     Serial.println(vref3);
+    //   }
+    //   else
+    //   {
+    //     Serial.println("Vref Guess is " + String(vref_guess, 4));
+    //   }
+    // }
 
 
 

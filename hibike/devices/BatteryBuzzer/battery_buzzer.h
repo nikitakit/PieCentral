@@ -1,13 +1,21 @@
 #ifndef BATTERY_BUZZER_H
 #define BATTERY_BUZZER_H
 
-extern float v_cell_1;
-extern float v_cell_2;
-extern float v_cell_3;
+#include "hibike_device.h"
+#include "eeprom.h" //implement
+#include "safety.h" //implement
+#include "voltage_sense.h"
+#include "disp_8.h"
+
+
+extern float v_cell1;
+extern float v_cell2;
+extern float v_cell3;
 extern float v_batt;
-extern float dv_cell_2;
-extern float dv_cell_3;
-extern bool print;
+extern float dv_cell2;
+extern float dv_cell3;
+extern float vref_guess;
+extern bool prints;
 
 extern float calib[];
 extern bool triple_calibration;
@@ -15,18 +23,9 @@ extern int buzzer;
 
 extern unsigned long last_print_time;
 
-#include "hibike_device.h"
-#include "eeprom.h" //implement
-#include "safety.h" //implement
-#include "voltage_sense.h"
-#include "disp_8.h"
-//////////////// DEVICE UID ///////////////////
-hibike_uid_t UID = {
-  BATTERY_BUZZER,                      // Device Type
-  0,                      // Year
-  UID_RANDOM,     // ID
-};
-///////////////////////////////////////////////
+// extern bool unsafe_status
+
+
 ///
 typedef enum {
   CELL_SAFE,

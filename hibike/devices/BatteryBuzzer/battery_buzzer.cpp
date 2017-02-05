@@ -1,6 +1,19 @@
-#include "battery_buzzer.h"
+#include "safety.h"
 
 // each device is responsible for keeping track of it's own params
+
+
+//////////////// DEVICE UID ///////////////////
+hibike_uid_t UID = {
+  BATTERY_BUZZER,                      // Device Type
+  0,                      // Year
+  UID_RANDOM,     // ID
+};
+///////////////////////////////////////////////
+
+
+
+
 
 int buzzer = 10;
 
@@ -10,7 +23,7 @@ unsigned long last_print_time = 0; //for the loop counter...
 bool triple_calibration = true; //decide whether to use triple calibration or the simpler single calibration.
 
 float vref_guess = 2.56;  //initial guess, based on datasheet.
-float calib[] = [2.56,2.56,2.56]; //initial guess, based on datasheet.
+float calib[3] = {2.56,2.56,2.56}; //initial guess, based on datasheet.
 
 
 //got to keep these globals here to keep the compiler happy.
@@ -21,7 +34,7 @@ float v_batt;   // param 4
 float dv_cell2; // param 5
 float dv_cell3; // param 6
 
-bool print = false; // keep until all Serial methods get deleted
+bool prints = false; // keep until all Serial methods get deleted
 
 
 // normal arduino setup function, you must call hibike_setup() here
