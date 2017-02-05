@@ -1,5 +1,5 @@
 """
-   This library contains a set of functions that allow the user to manually send and recieve  messages to and from a device
+   This library contains a set of functions that allow the user to manually send and recieve  messages to and from a device by calling functions
 """
 
 import hibike_message as hm
