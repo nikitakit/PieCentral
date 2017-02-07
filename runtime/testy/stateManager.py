@@ -96,7 +96,9 @@ class StateManager(object):
     try:
       for i, key in enumerate(keys):
         result = result[key][0]
+      temp = time.time()
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(result)
+      print(int(1000*(time.time() - temp)))
     except:
       error = StudentAPIKeyError(self.dictErrorMessage(i, keys, result))
       self.processMapping[PROCESS_NAMES.STUDENT_CODE].send(error)
@@ -195,8 +197,17 @@ class StateManager(object):
   def start(self):
     # TODO: Make sure request is a list/tuple before attempting to access
     # And that there are the correct number of elements
+    blist = 0
+    bcount = 0
+    execlist = 0
+    execcount = 0
+    block = time.time()
     while True:
       request = self.input.get(block=True)
+      blist += 1000*(time.time() - block)
+      bcount += 1
+      block = time.time()
+      i = time.time()
       cmdType = request[0]
       args = request[1]
       if(len(request) != 2):
@@ -213,3 +224,10 @@ class StateManager(object):
         command(*args)
       else:
         self.badThingsQueue.put(BadThing(sys.exc_info(), "Unknown process name: %s" % (request,), event = BAD_EVENTS.UNKNOWN_PROCESS, printStackTrace = False))
+      execlist += 1000*(time.time()-i)
+      if bcount > 1000:
+        #print(blist/1000.)
+        #print(execlist/1000.)
+        blist = 0
+        bcount = 0
+        execlist = 0

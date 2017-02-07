@@ -69,6 +69,7 @@ def runtime(testName=""):
         break
       nonTestModePrint(RUNTIME_CONFIG.DEBUG_DELIMITER_STRING.value)
       nonTestModePrint("Starting studentCode attempt: %s" % (restartCount,))
+      spawnProcess(PROCESS_NAMES.STUDENT_CODE, runStudentCode, testName, maxIter)
       while True:
         newBadThing = badThingsQueue.get(block=True)
         if newBadThing.event == BAD_EVENTS.ENTER_TELEOP and controlState != "teleop":
@@ -136,8 +137,11 @@ def runStudentCode(badThingsQueue, stateQueue, pipe, testName = "", maxIter = No
 
     # TODO: Replace execCount with a value in stateManager
     execCount = 0
+    prevTime = time.time()
     while (not terminated) and (maxIter is None or execCount < maxIter):
       checkTimedOut(mainFunc)
+#      print(int((time.time() - prevTime)*1000))
+      prevTime = time.time()
       nextCall = time.time()
       nextCall += 1.0/RUNTIME_CONFIG.STUDENT_CODE_HZ.value
       stateQueue.put([SM_COMMANDS.STUDENT_MAIN_OK, []])
@@ -184,6 +188,7 @@ def processFactory(badThingsQueue, stateQueue, stdoutRedirect = None):
     allProcesses[processName] = newProcess
     newProcess.daemon = True
     newProcess.start()
+    print(processName, newProcess.pid)
   return spawnProcessHelper
 
 def terminate_process(processName):

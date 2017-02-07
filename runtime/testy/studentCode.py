@@ -5,7 +5,44 @@ def setup():
   pass
 
 def main():
-  pass
+  i = time.time()
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+  response = Robot.getValue("incrementer")
+  response += 1
+  Robot.setValue(response, "incrementer")
+#  print(int((time.time() - i ) * 1000))
 
 def test0_setup():
   print("test0_setup")
