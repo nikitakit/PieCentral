@@ -111,7 +111,7 @@ int send_data_update(uint16_t params) {
 
       // check if a particular bit is set
       if (params & (1<<count)){
-        int bytes_written = device_data_update((uint8_t) count, &msg.payload[msg.payload_length], (size_t) msg.payload_length);
+        int bytes_written = device_read((uint8_t) count, &msg.payload[msg.payload_length], (size_t) msg.payload_length);
         if(bytes_written){
           msg.payload_length += bytes_written;
         }

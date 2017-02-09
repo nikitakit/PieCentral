@@ -36,8 +36,8 @@ void hibike_setup();
 void hibike_loop();
 void toggleLED();
 
-extern uint32_t device_write(uint8_t param, uint8_t* data,size_t len);
-extern uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len);
+extern uint32_t device_write(uint8_t param, uint8_t* data, size_t len);
+extern uint8_t device_read(uint8_t param, uint8_t* data, size_t len);
 
 
 #endif  // INC_HIBIKE_DEVICE
