@@ -225,6 +225,9 @@ class Editor extends React.Component {
     this.props.onUpdateCodeStatus(0);
   }
 
+  EStopRobot() {
+  }
+
   toggleUpdateModal() {
     this.setState({ showUpdateModal: !this.state.showUpdateModal });
   }
@@ -322,12 +325,20 @@ class Editor extends React.Component {
               onClick={this.startRobot}
               glyph="play"
               disabled={this.props.isRunningCode || !this.props.runtimeStatus}
+              bsStyle="success"
             />
             <EditorButton
               text="Stop"
               onClick={this.stopRobot}
               glyph="stop"
               disabled={!(this.props.isRunningCode && this.props.runtimeStatus)}
+              bsStyle="warning"
+            />
+            <EditorButton
+              text="E-Stop"
+              onClick={this.EStopRobot}
+              glyph="off"
+              bsStyle="danger"
             />
             <EditorButton
               text="Upload"

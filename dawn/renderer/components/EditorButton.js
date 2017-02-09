@@ -13,7 +13,7 @@ const EditorButton = (props) => {
   return (
     <OverlayTrigger placement="top" overlay={tooltip}>
       <Button
-        bsStyle="default"
+        bsStyle={props.bsStyle || 'default'}
         bsSize="small"
         onClick={props.onClick}
         disabled={props.disabled}
@@ -29,6 +29,7 @@ EditorButton.propTypes = {
   onClick: React.PropTypes.func,
   glyph: React.PropTypes.string,
   disabled: React.PropTypes.bool,
+  bsStyle: React.PropTypes.string,
 };
 
 export default EditorButton;
