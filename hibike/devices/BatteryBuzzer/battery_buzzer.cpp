@@ -47,6 +47,7 @@ void setup() {
 
   setup_display();
   setup_sensing();
+  handle_calibration();
 
   hibike_setup();
 }
@@ -60,7 +61,7 @@ void loop() {
   // note that hibike will only process one packet per call to hibike_loop()
   // so exessive delays here will affect hibike.
   handle_8_segment();
-  handle_calibration();
+  // handle_calibration();
 
   if(millis() - last_print_time>250){
     measure_cells();
@@ -80,7 +81,11 @@ void loop() {
 //   return  -   size of bytes written on success; otherwise return 0
 
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
-  //trigger calibration
+  if (param == 7){ //calibrate pdb
+    handle_calibration();
+    data[0] = 1; //Success
+    return sizeof(uint8_t);
+  }
   return 0;
 
 }
@@ -97,9 +102,9 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
 
 uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len) {
   if(param == 0){
-    if (MAX_PAYLOAD_SIZE - buf_len > sizeof(uint8_t)) {
+    if (MAX_PAYLOAD_SIZE - buf_len > sizeof(bool)) {
       data_update_buf[0] = unsafe_status;
-      return sizeof(uint8_t);
+      return sizeof(bool);
     }
   }
   if (MAX_PAYLOAD_SIZE - buf_len < sizeof(float) || param >= 7){

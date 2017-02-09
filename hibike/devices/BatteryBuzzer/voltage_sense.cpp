@@ -98,8 +98,7 @@ void measure_cells() //measures the battery cells. Should call at least twice a 
 
 void handle_calibration() //called very frequently by loop.
 {
-  if (digitalRead(calib_button)) //I pressed the button, start calibrating.
-  { 
+  // if (digitalRead(calib_button)) //I pressed the button, start calibrating. From past days of button pressing
     
     if(triple_calibration && calib[0] == 2.56 && calib[1] == 2.56 & calib[2] == 2.56)
     {
@@ -137,7 +136,6 @@ void handle_calibration() //called very frequently by loop.
       start_8_seg_sequence(1);
       
     }
-  }
 }
 
 float calibrate() //calibrates the device.
