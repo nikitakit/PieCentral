@@ -1,0 +1,9 @@
+api saves every key seen
+
+when a new key is requested, use current api. returns either None (error) or a (value, value) of (value of key, timestamp)
+
+when studentCode requests value, we first look in studentAPI dictionary to see if we have already requested that value. If so, we check that the timestamp is not stale.
+If the timestamp is recent enough, we return the value. 
+Otherwise, we treat it as if we have never seen the key before, and request a new one. 
+
+For now, setting values is done the same as before.

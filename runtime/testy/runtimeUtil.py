@@ -65,6 +65,7 @@ class SM_COMMANDS(Enum):
   GET_TIME            = ()
   EMERGENCY_STOP      = ()
   EMERGENCY_RESTART   = ()
+  CREATE_SHARED_KEY   = ()
 
 class RUNTIME_CONFIG(Enum):
   STUDENT_CODE_TIMELIMIT      = 1
@@ -72,6 +73,7 @@ class RUNTIME_CONFIG(Enum):
   DEBUG_DELIMITER_STRING      = "****************** RUNTIME DEBUG ******************"
   PIPE_READY                  = ["ready"]
   TEST_OUTPUT_DIR             = "test_outputs/"
+  STALE_DATA_TIMEOUT          = 1.
 
 class BadThing:
   def __init__(self, exc_info, data, event=BAD_EVENTS.BAD_EVENT, printStackTrace=True):

@@ -32,7 +32,8 @@ class StateManager(object):
       SM_COMMANDS.RECV_ANSIBLE: self.recv_ansible,
       SM_COMMANDS.GET_TIME : self.getTimestamp,
       SM_COMMANDS.EMERGENCY_STOP: self.emergencyStop,
-      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart
+      SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart,
+      SM_COMMANDS.CREATE_SHARED_KEY: self.createSharedKey
     }
     return commandMapping
 
