@@ -34,7 +34,9 @@ class StateManager(object):
       SM_COMMANDS.EMERGENCY_STOP: self.emergencyStop,
       SM_COMMANDS.EMERGENCY_RESTART: self.emergencyRestart,
       SM_COMMANDS.SET_IP: self.set_ip,
-      SM_COMMANDS.SEND_IP: self.send_ip
+      SM_COMMANDS.SEND_IP: self.send_ip,
+      SM_COMMANDS.STUDENT_UPLOAD: self.student_upload,
+      SM_COMMANDS.SEND_CONSOLE: self.send_console
     }
     return commandMapping
 
@@ -139,6 +141,13 @@ class StateManager(object):
 
   def send_ip(self, process_name):
     self.processMapping[process_name].send(self.state["ip"][0])
+
+  def student_upload(self):
+    #TODO Implement Student Upload Confirmation
+    self.processMapping[PROCES_NAMES.TCP_PROCESS].send(["upload_status", True])
+ 
+  def send_console(self, console_log):
+    self.processMapping[PROCESS_NAMES.TCP_PROCESS].send(["console", console_log])
 
   def getTimestamp(self, keys):
     currDict = self.state

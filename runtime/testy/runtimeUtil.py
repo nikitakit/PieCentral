@@ -71,6 +71,7 @@ class SM_COMMANDS(Enum):
   EMERGENCY_RESTART   = ()
   SET_IP              = ()
   SEND_IP             = ()
+  STUDENT_UPLOAD      = ()
 
 class RUNTIME_CONFIG(Enum):
   STUDENT_CODE_TIMELIMIT      = 1

@@ -249,10 +249,10 @@ class TCPClass(AnsibleHandler):
         sendName = THREAD_NAMES.TCP_SENDER
         recvName = THREAD_NAMES.TCP_RECEIVER
         super().__init__(sendNAme, TCPClass.sender, recvName, TCPClass.receiver, badThingsQueue, stateQueue, pipe)
+
         stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.TCP_PROCESS]])
         self.dawn_ip = pipe.recv()
 
-        #connect to dawn via TCP
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.dawn_ip, TCPClass.PORT))
 
@@ -284,7 +284,7 @@ class TCPClass(AnsibleHandler):
         while True:
             try:
                 rawMessage = pipe.recv()
-                if rawMessage[0]:
+                if rawMessage[0] == "upload_status":
                     packageMessage(rawMessage[1])
                 else:
                     packageConfirm(rawMessage[1])
@@ -309,7 +309,7 @@ class TCPClass(AnsibleHandler):
                 unpackagedData = unpackage(recv_data)
                 if not unpackagedData:
                     pass
-                #send data to stateManager
+                stateQueue.put([SM_COMMANDS.STUDENT_UPLOAD, []])
 
 
 
