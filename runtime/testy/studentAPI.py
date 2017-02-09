@@ -2,10 +2,40 @@ import csv
 
 from runtimeUtil import *
 
-class Robot:
+class StudentAPIObject:
   def __init__(self, toManager, fromManager):
     self.fromManager = fromManager
     self.toManager = toManager
+
+  def _getSMValue(self, key, *args):
+    """Returns the value associated with key
+    """
+    self.toManager.put([SM_COMMANDS.GET_VAL, [[key] + list(args)]])
+    message = self.fromManager.recv()
+    if isinstance(message, StudentAPIKeyError):
+        raise message
+    return message
+
+  def _setSMValue(self, value, key, *args):
+    """Sets the value associated with key
+    """
+    #statemanager returns value, then method checks to see whether exception
+    self.toManager.put([SM_COMMANDS.SET_VAL, [value, [key] + list(args)]])
+    message = self.fromManager.recv()
+    if isinstance(message, StudentAPIKeyError):
+        raise message
+    return message
+
+class Gamepad(StudentAPIObject):
+  def get_value(name):
+    return self._getSMValue('dawn', 0, name) #assumes gamepad by default at 0
+
+  def get_value(name, gamepad_number):
+    return self._getSMValue('dawn', gamepad_number, name)
+
+class Robot(StudentAPIObject):
+  def __init__(self, toManager, fromManager):
+    StudentAPIObject.__init__(self, toManager, fromManager)
     self._createSensorMapping()
 
   def get_value(self, device_name):
@@ -32,6 +62,9 @@ class Robot:
   def set_coast(self, device_name, coast_enabled):
     pass
 
+  def is_running(coro):
+    pass
+
   def _createSensorMapping(self, filename = 'namedPeripherals.csv'):
     self.sensorMappings = {}
     with open(filename, 'r') as f:
@@ -48,25 +81,6 @@ class Robot:
     if isinstance(message, StudentAPIKeyError):
         raise message
     return
-
-  def _getSMValue(self, key, *args):
-    """Returns the value associated with key
-    """
-    self.toManager.put([SM_COMMANDS.GET_VAL, [[key] + list(args)]])
-    message = self.fromManager.recv()
-    if isinstance(message, StudentAPIKeyError):
-        raise message
-    return message
-
-  def _setSMValue(self, value, key, *args):
-    """Sets the value associated with key
-    """
-    #statemanager returns value, then method checks to see whether exception
-    self.toManager.put([SM_COMMANDS.SET_VAL, [value, [key] + list(args)]])
-    message = self.fromManager.recv()
-    if isinstance(message, StudentAPIKeyError):
-        raise message
-    return message
 
   def getTimestamp(self, key, *args):
     """Returns the value associated with key
