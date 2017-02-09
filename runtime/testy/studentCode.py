@@ -8,6 +8,8 @@ def main():
   pass
 
 def asyncawait_setup():
+  Robot.createKey("right")
+  Robot.createKey("counter")
   Robot.setValue("right", 3.0) 
   Robot.setValue("counter", 0.0)
   Robot.run(asyncawait_helper)
@@ -18,6 +20,7 @@ def asyncawait_main():
     print("Async Error")
 
 async def asyncawait_helper():
+  Robot.createKey("left")
   Robot.setValue("left", 1.0)
   curr = time.time()
   await Actions.sleep(2.0)
