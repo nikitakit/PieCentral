@@ -2,6 +2,10 @@ import csv
 
 from runtimeUtil import *
 
+class Actions:
+  async def sleep(seconds):
+    await asyncio.sleep(seconds)
+
 class StudentAPIObject:
   def __init__(self, toManager, fromManager):
     self.fromManager = fromManager

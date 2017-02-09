@@ -12,9 +12,13 @@ class HibikeSimulator:
   def makeCommandMap(self):
     commandMapping = {
       HIBIKE_COMMANDS.SUBSCRIBE : self.subscribe_device,
-      HIBIKE_COMMANDS.E_STOP: self.emergency_stop
+      HIBIKE_COMMANDS.E_STOP: self.emergency_stop,
+      HIBIKE_COMMANDS.WRITE: self.write_info
     }
     return commandMapping
+
+  def write_info(self, mappings): #[uid, param_values]
+    pass
 
   def subscribe_device(self, uid, delay, params):
     self._device_subscribed()
