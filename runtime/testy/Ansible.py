@@ -128,7 +128,7 @@ class UDPSendClass(AnsibleHandler):
                 time.sleep(max(nextCall - time.time(), 0))
             except Exception as e:
                 badThingsQueue.put(BadThing(sys.exc_info(), 
-                    "UDP packager thread has crashed with error:" + str(e),  
+                    "UDP packager thread has crashed with error:" + str(e),
                     event = BAD_EVENTS.UDP_SEND_ERROR, 
                     printStackTrace = True))
 
@@ -253,21 +253,63 @@ class TCPClass(AnsibleHandler):
         self.dawn_ip = pipe.recv()
 
         #connect to dawn via TCP
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.dawn_ip, TCPClass.PORT))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.dawn_ip, TCPClass.PORT))
 
     def sender(self, badThingsQueue, stateQueue, pipe):
-        return 
+        def packageMessage(data):
+            try:
+                proto_message = notification_pb2.Notification()
+                proto_message.header = notification_pb2.Notification.CONSOLE_LOGGIN
+                proto_message.console_output = data
+                return proto_message.SeralizeToString()
+            except Exception as e:
+                badThingsQueue.put(BadThing(sys.exc_info(), 
+                    "TCP packager crashed with error: " + str(e),
+                    event = BAD_EVENTS.TCP_SEND_ERROR,
+                    printStackTrace = True))
+        def packageConfirm(confirm):
+            try:
+                proto_message = notification_pb2.Notification()
+                if confirm:
+                    proto_message.header = notification_pb2.Notification.STUDENT_RECEIVED
+                else:
+                    proto_message.header = notification_pb2.Notification.STUDENT_NOT_RECEIVED
+                return proto_message.SeralizeToString()
+            except Exception as e:
+                badThingsQueue.put(BadThing(sys.exc_info(), 
+                    "TCP packager crashed with error: " + str(e),
+                    event = BAD_EVENTS.TCP_SEND_ERROR,
+                    printStackTrace = True))
+        while True:
+            try:
+                rawMessage = pipe.recv()
+                if rawMessage[0]:
+                    packageMessage(rawMessage[1])
+                else:
+                    packageConfirm(rawMessage[1])
+                self.sock.sendall(packMessage)
+                #self.sendBuffer.replace(packMessage)
+            except Exception as e:
+                badThingsQueue.put(BadThing(sys.exc_info(), 
+                    "TCP packager crashed with error: " + str(e),
+                    event = BAD_EVENTS.TCP_SEND_ERROR,
+                    printStackTrace = True))
 
     def receiver(self, badThingsQueue, stateQueue, pipe):
+        def unpackage(data):
+            received_proto = notification_pb2.Notification()
+            received_proto.ParseFromString(data)
+            upload_status =  received_proto.header
+            if upload_status != notification_pb2.Notification.STUDENT_SENT:
+                return None
         try:
             while True:
-                recv_data, addr = s.recv(2048)
-
-
-
-
-
+                recv_data, addr = self.sock.recv(2048)
+                unpackagedData = unpackage(recv_data)
+                if not unpackagedData:
+                    pass
+                #send data to stateManager
 
 
 
