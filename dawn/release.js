@@ -26,7 +26,7 @@ function pack(platform, arch, noprune) {
   }
 
   opts.dir = __dirname; // source dir
-  opts.name = 'dawn';
+  opts.name = 'Dawn';
   opts.prune = !noprune; //remove dev dependencies unless noprune is set
   opts.icon = './icons/pieicon';
   opts.asar = true;
