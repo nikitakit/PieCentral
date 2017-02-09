@@ -2,7 +2,6 @@
 
 message_t hibikeBuff;
 uint64_t prevTime, currTime, heartbeatTime;
-// uint8_t param;
 uint16_t params, old_params;
 uint32_t value;
 uint16_t subDelay;
@@ -70,8 +69,6 @@ void hibike_loop() {
         case DEVICE_READ:
 
           send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
-          // param = hibikeBuff.payload[0] - 1;
-          // send_device_response(param + 1, device_status(param));
           break;
 
         case DEVICE_DATA:
@@ -82,10 +79,6 @@ void hibike_loop() {
         case PING:
           send_subscription_response(params, subDelay, &UID);
           break;
-
-        // case DESCRIPTION_REQUEST:
-        //   send_description_response(DESCRIPTION);
-        //   break;
 
         default:
           // Uh oh...
@@ -132,18 +125,6 @@ void hibike_loop() {
       }
       break;
   }
-
-  // DataUpdates
-  // if ((subDelay > 0) && (currTime - prevTime >= subDelay)) {
-  //   prevTime = currTime;
-  //   //hibikeBuff.messageID = DATA_UPDATE;
-  //   hibikeBuff.payload_length = data_update(hibikeBuff.payload, sizeof(hibikeBuff.payload));
-  //   if (hibikeBuff.payload_length > MAX_PAYLOAD_SIZE) {
-  //     toggleLED();
-  //   } else {
-  //     send_message(&hibikeBuff); //what does this do?
-  //   }
-  // }
 
   if ((subDelay > 0) && (currTime - prevTime >= subDelay)) {
     prevTime = currTime;
