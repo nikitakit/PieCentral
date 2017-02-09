@@ -77,8 +77,9 @@ def runtime(testName=""):
           connectionState = True
           continue
         elif newBadThing.event == BAD_EVENTS.DAWN_DISCONNECTED and connectionState:
+          #TODO Impelement Dawn Timeout in Ansible.py
           terminate_process(PROCESS_NAMES.UDP_SEND_PROCESS)
-          #terminate_process(tcp)
+          terminate_process(PROCESS_NAMES.TCP_PROCESS)
           connectionState = False
           continue
         elif newBadThing.event == BAD_EVENTS.ENTER_TELEOP and controlState != "teleop":
