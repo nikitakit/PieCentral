@@ -15,8 +15,6 @@ hibike_uid_t UID = {
 };
 ///////////////////////////////////////////////
 
-#define NUM_PARAMS 6 //change to however many params are needed
-
 // this is an optional device specific enum to make implementation easier
 typedef enum {
   VALUE_0 = 1,
@@ -25,7 +23,7 @@ typedef enum {
   VALUE_3 = 13,
   VALUE_4 = 14,
   VALUE_5 = 7
-} param;
+} ExampleDeviceParam;
 
 // function prototypes
 void setup();

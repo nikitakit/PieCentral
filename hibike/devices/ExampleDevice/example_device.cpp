@@ -45,26 +45,44 @@ void loop() {
 uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
   switch (param) {
     case VALUE_0:
+      if (len < sizeof(value0)) {
+        return 0;
+      }
       value0 = (uint8_t) read_num_bytes(data, sizeof(value0));
       return sizeof(value0);
       break;
     case VALUE_1:
+      if (len < sizeof(value1)) {
+        return 0;
+      }
       value1 = (uint8_t) read_num_bytes(data, sizeof(value1));
       return sizeof(value1);
       break;
     case VALUE_2:
+      if (len < sizeof(value2)) {
+        return 0;
+      }
       value2 = (uint16_t) read_num_bytes(data, sizeof(value2));
       return sizeof(value2);
       break;
     case VALUE_3:
+      if (len < sizeof(value3)) {
+        return 0;
+      }
       value3 = (uint32_t) read_num_bytes(data, sizeof(value3));
       return sizeof(value3);
       break;
     case VALUE_4:
+      if (len < sizeof(value4)) {
+        return 0;
+      }
       value4 = (uint64_t) read_num_bytes(data, sizeof(value4));
       return sizeof(value4);
       break;
     case VALUE_5:
+      if (len < sizeof(value5)) {
+        return 0;
+      }
       value5 = (uint64_t) read_num_bytes(data, sizeof(value5));
       return sizeof(value5);
       break;
@@ -87,26 +105,44 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
 uint8_t device_data_update(uint8_t param, uint8_t* data_update_buf, size_t buf_len) {
   switch (param) {
     case VALUE_0:
+      if (buf_len < sizeof(value0)) {
+        return 0;
+      }
       write_num_bytes(value0, data_update_buf, sizeof(value0));
       return sizeof(value0);
       break;
     case VALUE_1:
+      if (buf_len < sizeof(value1)) {
+        return 0;
+      }
       write_num_bytes(value1, data_update_buf, sizeof(value1));
       return sizeof(value1);
       break;
     case VALUE_2:
+      if (buf_len < sizeof(value2)) {
+        return 0;
+      }
       write_num_bytes(value2, data_update_buf, sizeof(value2));
       return sizeof(value2);
       break;
     case VALUE_3:
+      if (buf_len < sizeof(value3)) {
+        return 0;
+      }
       write_num_bytes(value3, data_update_buf, sizeof(value3));
       return sizeof(value3);
       break;
     case VALUE_4:
+      if (buf_len < sizeof(value4)) {
+        return 0;
+      }
       write_num_bytes(value4, data_update_buf, sizeof(value4));
       return sizeof(value4);
       break;
     case VALUE_5:
+      if (buf_len < sizeof(value5)) {
+        return 0;
+      }
       write_num_bytes(value5, data_update_buf, sizeof(value5));
       return sizeof(value5);
       break;
