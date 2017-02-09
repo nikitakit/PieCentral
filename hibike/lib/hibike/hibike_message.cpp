@@ -101,17 +101,22 @@ int send_subscription_response(uint16_t params, uint16_t delay, hibike_uid_t* ui
   return send_message(&msg); 
 }
 
-//deprecated but not really
 int send_data_update(uint16_t params) { 
   message_t msg;
   msg.messageID = DEVICE_DATA;
   msg.payload_length = 2;
+
+  // iterate over the params bitmap
   for (uint16_t count = 0; (params >> count) > 0; count++) {
+
+      // check if a particular bit is set
       if (params & (1<<count)){
         int bytes_written = device_data_update((uint8_t) count, &msg.payload[msg.payload_length], (size_t) msg.payload_length);
         if(bytes_written){
           msg.payload_length += bytes_written;
         }
+
+        // if we failed to write anything for a param, make sure its bit is unset
         else{
           params &= ~(1<<count);
         }
@@ -121,11 +126,9 @@ int send_data_update(uint16_t params) {
   *((uint16_t *) &msg.payload[0]) = params;
 
   if (msg.payload_length > MAX_PAYLOAD_SIZE) {
-    // toggleLED();
     return -1;
   } else {
-    // send_data_update(params, hibikeBuff.payload,hibikeBuff.payload_length); //what does this do?
-    return send_message(&msg); //what does this do?
+    return send_message(&msg);
   }
 }
 
