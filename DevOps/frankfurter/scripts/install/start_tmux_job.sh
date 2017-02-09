@@ -44,7 +44,7 @@ git checkout devops/deployment
 # So that the linux headers version matches that of the kernel
 sudo /opt/scripts/tools/update_kernel.sh
 echo 'We will now reboot to load the new kernel.'
-echo "Please run: tmux new-session -d '~/PieCentral/DevOps/frankfurter/scripts/install/master_frank_setup.sh'"
+echo "After rebooting, connect to wifi and run: tmux new-session -d '~/PieCentral/DevOps/frankfurter/scripts/install/master_frank_setup.sh'"
 sudo reboot
 
 # Feel free to disconnect and run another script #############################################
