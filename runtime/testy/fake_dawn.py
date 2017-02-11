@@ -69,7 +69,8 @@ sender_thread.daemon = True
 recv_thread.daemon = True
 recv_thread.start()
 sender_thread.start()
-tcp_thread = 
+tcp_thread = threading.Thread(target = tcp_relay, name = "fake dawn tcp", args = (tcp_port))
+tcp_thread.start()
 print("started threads")
 
 #Just Here for testing, should not be run regularly
