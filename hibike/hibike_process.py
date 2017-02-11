@@ -13,6 +13,7 @@ __all__ = ["hibike_process"]
 uid_to_index = {}
 connect_write = True
 uid_to_ser = {}
+devices = {}
 
 class Device:
 
@@ -21,13 +22,14 @@ class Device:
         self.instruction_queue = queue.Queue()
         self.write_thread = threading.Thread(target=device_write_thread, args=(ser, self.instruction_queue))
         self.read_thread = threading.Thread(target=device_read_thread, args=(ser, self.instruction_queue, None, stateQueue))
-        self.uid
+        self.uid = 0
 
     def set_uid(self, uid):
         self.uid = uid
 
 
 def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
+    global devices
 
     ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
 
@@ -39,11 +41,9 @@ def hibike_process(badThingsQueue, stateQueue, pipeFromChild):
 
     serials = [serial.Serial(port, 115200) for port in ports]
 
-    devices = dict()
-
-    for serial in serials:
-        device = Device(serial, stateQueue)
-        devices[serial] = device
+    for ser in serials:
+        device = Device(ser, stateQueue)
+        devices[ser] = device
 
 
     print(ports)
@@ -91,7 +91,8 @@ def device_write_thread(ser, queue):
 
 
 
-def device_read_thread(index, ser, instructionQueue, errorQueue, stateQueue):
+def device_read_thread(ser, instructionQueue, errorQueue, stateQueue):
+    global devices
     uid = None
     while True:
         try:
@@ -110,7 +111,7 @@ def device_read_thread(index, ser, instructionQueue, errorQueue, stateQueue):
                     print("[HIBIKE] Port %s received data before enumerating!!!" % ser.port)
         except serial.serialutil.SerialException:
             stateQueue.put(("device_disconnected", [uid]))
-            devices[ser].instruction_queue.put("die")
+            devices[ser].instruction_queue.put(("die", []))
             del devices[ser]
             return
 
@@ -185,3 +186,6 @@ if __name__ == "__main__":
                 pipeToChild.send(["subscribe_device", [uid, 10, [param["name"] for param in hm.devices[hm.uid_to_device_id(uid)]["params"]]]])
         elif command == "device_values":
             print("%10.2f, %s" % (time.time(), str(args)))
+        elif command == "device_disconnected":
+            uid = args[0]
+            print("Device: %s Has Disconnected"%uid)
