@@ -78,6 +78,7 @@ class SM_COMMANDS(Enum):
   SET_ADDR            = ()
   SEND_ADDR           = ()
   STUDENT_UPLOAD      = ()
+  SEND_CONSOLE        = ()
 
 class RUNTIME_CONFIG(Enum):
   STUDENT_CODE_TIMELIMIT      = 1
