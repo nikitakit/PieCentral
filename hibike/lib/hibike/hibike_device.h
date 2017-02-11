@@ -39,5 +39,9 @@ void toggleLED();
 extern uint32_t device_write(uint8_t param, uint8_t* data, size_t len);
 extern uint8_t device_read(uint8_t param, uint8_t* data, size_t len);
 
+uint64_t getLastHeartBeatResponse();
+uint64_t getLastHeartBeatRequest();
+void setHeartBeatFreq(uint16_t freq);
+
 
 #endif  // INC_HIBIKE_DEVICE

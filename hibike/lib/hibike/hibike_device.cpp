@@ -1,10 +1,10 @@
 #include "hibike_device.h"
 
 message_t hibikeBuff;
-uint64_t prevTime, currTime, heartbeatTime;
+uint64_t prevTime, currTime, heartbeatTime,sentHeartbeat, respHeartBeat;
 uint16_t params, old_params;
 uint32_t value;
-uint16_t subDelay;
+uint16_t subDelay,hb_freq;
 led_state heartbeat_state;
 bool led_enabled;
 
@@ -12,6 +12,7 @@ void hibike_setup() {
   Serial.begin(115200);
   prevTime = millis();
   subDelay = 0;
+  hb_freq = 0;
 
   // Setup Error LED
   pinMode(LED_PIN, OUTPUT);
@@ -74,6 +75,16 @@ void hibike_loop() {
           toggleLED();
           break;
 
+        case HEART_BEAT_REQUEST:
+          //send heart beat response
+          send_heart_beat_response(1);
+          break;
+
+        case HEART_BEAT_RESPONSE:
+          respHeartBeat = currTime
+          // Unsupported packet at this time
+          break;
+
         case PING:
           send_subscription_response(params, subDelay, &UID);
           break;
@@ -85,50 +96,56 @@ void hibike_loop() {
     }
   }
 
-  // Hearbeat
-  switch (heartbeat_state) {
-    case RESTING:
-      if (currTime - heartbeatTime >= 1700) {
-        heartbeatTime = currTime;
-        digitalWrite(LED_PIN, HIGH);
-        led_enabled = true;
-        heartbeat_state = FIRST_BEAT;
-      }
-      break;
-
-    case FIRST_BEAT:
-      if (currTime - heartbeatTime >= 100) {
-        heartbeatTime = currTime;
-        digitalWrite(LED_PIN, LOW);
-        led_enabled = false;
-        heartbeat_state = BREAK;
-      }
-      break;
-
-    case BREAK:
-      if (currTime - heartbeatTime >= 100) {
-        heartbeatTime = currTime;
-        digitalWrite(LED_PIN, HIGH);
-        led_enabled = true;
-        heartbeat_state = SECOND_BEAT;
-      }
-      break;
-
-    case SECOND_BEAT:
-      if (currTime - heartbeatTime >= 100) {
-        heartbeatTime = currTime;
-        digitalWrite(LED_PIN, LOW);
-        led_enabled = false;
-        heartbeat_state = RESTING;
-      }
-      break;
-  }
-
   if ((subDelay > 0) && (currTime - prevTime >= subDelay)) {
     prevTime = currTime;
     send_data_update(params);
   }
 
+  if ((hb_freq > 0) && (currTime - sentHeartbeat)>=hb_freq){
+    else{
+      send_heart_beat_request(1);
+      sentHeartbeat = currTime;
+    }
+  }
+
+  // // Hearbeat
+  // switch (heartbeat_state) {
+  //   case RESTING:
+  //     if (currTime - heartbeatTime >= 1700) {
+  //       heartbeatTime = currTime;
+  //       digitalWrite(LED_PIN, HIGH);
+  //       led_enabled = true;
+  //       heartbeat_state = FIRST_BEAT;
+  //     }
+  //     break;
+
+  //   case FIRST_BEAT:
+  //     if (currTime - heartbeatTime >= 100) {
+  //       heartbeatTime = currTime;
+  //       digitalWrite(LED_PIN, LOW);
+  //       led_enabled = false;
+  //       heartbeat_state = BREAK;
+  //     }
+  //     break;
+
+  //   case BREAK:
+  //     if (currTime - heartbeatTime >= 100) {
+  //       heartbeatTime = currTime;
+  //       digitalWrite(LED_PIN, HIGH);
+  //       led_enabled = true;
+  //       heartbeat_state = SECOND_BEAT;
+  //     }
+  //     break;
+
+  //   case SECOND_BEAT:
+  //     if (currTime - heartbeatTime >= 100) {
+  //       heartbeatTime = currTime;
+  //       digitalWrite(LED_PIN, LOW);
+  //       led_enabled = false;
+  //       heartbeat_state = RESTING;
+  //     }
+  //     break;
+  // }
 
 }
 
@@ -140,4 +157,16 @@ void toggleLED() {
     digitalWrite(LED_PIN, HIGH);
     led_enabled = true;
   }
+}
+
+uint64_t getLastHeartbeatResponse(){
+  return respHeartBeat;
+}
+
+uint64_t getLastHeartbeatRequest(){
+  return sentHeartbeat;
+}
+
+void setHeartBeatFreq(uint16_t freq){
+  hb_freq = freq;
 }
