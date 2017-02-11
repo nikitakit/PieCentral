@@ -69,8 +69,8 @@ class SM_COMMANDS(Enum):
   GET_TIME            = ()
   EMERGENCY_STOP      = ()
   EMERGENCY_RESTART   = ()
-  SET_IP              = ()
-  SEND_IP             = ()
+  SET_ADDR            = ()
+  SEND_ADDR           = ()
   STUDENT_UPLOAD      = ()
 
 class RUNTIME_CONFIG(Enum):
