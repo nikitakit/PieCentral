@@ -98,15 +98,14 @@ void measure_cells() //measures the battery cells. Should call at least twice a 
 
 void handle_calibration() //called very frequently by loop.
 {
-  // if (digitalRead(calib_button)) //I pressed the button, start calibrating. From past days of button pressing
-    
+  if (digitalRead(calib_button)) //I pressed the button, start calibrating.
+    {
     if(triple_calibration && calib[0] == 2.56 && calib[1] == 2.56 & calib[2] == 2.56)
     {
       //i'm in triple calibration mode, but the calibration array is exactly the same as the datasheet values... which means i haven't been calibrated.
       float vref_new = calibrate();
       write_triple_eeprom(calib[0],calib[1],calib[2]);
-      start_8_seg_sequence(2);
-      
+      start_8_seg_sequence(2); 
     }
     else if(!triple_calibration && get_calibration() == -1.0) //i'm not in triple calibration mode, and i haven't been calibrated.
     {   
@@ -132,10 +131,14 @@ void handle_calibration() //called very frequently by loop.
       calib[0] = 2.56;
       calib[1] = 2.56;
       calib[2] = 2.56;
+
+
       clear_eeprom();
       start_8_seg_sequence(1);
       
+
     }
+  }
 }
 
 float calibrate() //calibrates the device.
