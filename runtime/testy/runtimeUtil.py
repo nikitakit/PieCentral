@@ -48,6 +48,11 @@ class HIBIKE_RESPONSE(Enum):
   DEVICE_SUBBED = "device_subscribed"
 
 @unique
+class ANSIBLE_COMMANDS(Enum):
+  STUDENT_UPLOAD = "student_upload"
+  CONSOLE        = "console"
+
+@unique
 class SM_COMMANDS(Enum):
   # Used to autoenumerate
   # Don't ask I don't know how

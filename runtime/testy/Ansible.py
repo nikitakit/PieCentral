@@ -85,8 +85,6 @@ class UDPSendClass(AnsibleHandler):
         self.dawn_ip = pipe.recv()[0]
         super().__init__(packagerName, UDPSendClass.packageData, sockSendName,
                          UDPSendClass.udpSender, badThingsQueue, stateQueue, pipe)
-        stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.UDP_SEND_PROCESS]])
-        self.dawn_ip = pipe.recv()
 
     def packageData(self, badThingsQueue, stateQueue, pipe):
         """Function run as a thread that packages data to be sent.
@@ -252,8 +250,8 @@ class TCPClass(AnsibleHandler):
         recvName = THREAD_NAMES.TCP_RECEIVER
         super().__init__(sendNAme, TCPClass.sender, recvName, TCPClass.receiver, badThingsQueue, stateQueue, pipe)
 
-        stateQueue.put([SM_COMMANDS.SEND_IP, [PROCESS_NAMES.TCP_PROCESS]])
-        self.dawn_ip = pipe.recv()
+        stateQueue.put([SM_COMMANDS.SEND_ADDR, [PROCESS_NAMES.TCP_PROCESS]])
+        self.dawn_ip = pipe.recv()[0]
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.dawn_ip, TCPClass.PORT))
@@ -262,7 +260,7 @@ class TCPClass(AnsibleHandler):
         def packageMessage(data):
             try:
                 proto_message = notification_pb2.Notification()
-                proto_message.header = notification_pb2.Notification.CONSOLE_LOGGIN
+                proto_message.header = notification_pb2.Notification.CONSOLE_LOGGING
                 proto_message.console_output = data
                 return proto_message.SeralizeToString()
             except Exception as e:
@@ -286,12 +284,13 @@ class TCPClass(AnsibleHandler):
         while True:
             try:
                 rawMessage = pipe.recv()
-                if rawMessage[0] == "upload_status":
+                if rawMessage[0] == ANSIBLE_COMMANDS.STUDENT_UPLOAD:
                     packageMessage(rawMessage[1])
-                else:
+                elif rawMessage[0] == ANSIBLE_COMMANDS.CONSOLE:
                     packageConfirm(rawMessage[1])
+                else:
+                    continue
                 self.sock.sendall(packMessage)
-                #self.sendBuffer.replace(packMessage)
             except Exception as e:
                 badThingsQueue.put(BadThing(sys.exc_info(), 
                     "TCP packager crashed with error: " + str(e),
@@ -310,7 +309,7 @@ class TCPClass(AnsibleHandler):
                 recv_data, addr = self.sock.recv(2048)
                 unpackagedData = unpackage(recv_data)
                 if not unpackagedData:
-                    pass
+                    continue
                 stateQueue.put([SM_COMMANDS.STUDENT_UPLOAD, []])
 
 
