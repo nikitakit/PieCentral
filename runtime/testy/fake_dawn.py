@@ -4,10 +4,12 @@ import queue
 import time
 import runtime_pb2
 import ansible_pb2
+import notification_pb2
 
 data = [0]
 send_port = 1236
 recv_port = 1235
+tcp_port = 1234
 dawn_hz = 10
 
 def dawn_packager():
@@ -37,13 +39,29 @@ def receiver(port, receive_queue):
         msg, addr = s.recvfrom(2048)
         runtime_message = runtime_pb2.RuntimeData()
         runtime_message.ParseFromString(msg)
-        print(runtime_message.robot_state)
-        for sensor in runtime_message.sensor_data:
-            print(sensor.device_type)
-            print(sensor.device_name)
-            print(sensor.value)
-            print(sensor.uid)
         receive_queue[0]=msg
+
+def tcp_relay(port):
+    host = '127.0.0.1'
+    msg = notification_pb2.Notification()
+    msg.header = notification_pb2.Type.STUDENT_SENT
+    msg = msg.SerializeToString()
+    s  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
+    while True:
+        next_call = time.time()
+        s.send(msg)
+        receive_msg, addr = s.recvfrom(2048)
+        if receive_msg is None:
+            continue
+        else:
+            msg = receive_msg
+            parser = notification_pb2.Notification()
+            parser.ParseFromString(receive_msg)
+            print(parser.header)
+        next_call += 1.0/dawn_hz
+        time.sleep(max(next_call - time.time(), 0))
+
 
 sender_thread = threading.Thread(target = sender, name = "fake dawn sender", args = (send_port, data))
 recv_thread = threading.Thread(target = receiver, name = "fake dawn receiver", args = (recv_port, data))
@@ -51,6 +69,7 @@ sender_thread.daemon = True
 recv_thread.daemon = True
 recv_thread.start()
 sender_thread.start()
+tcp_thread = 
 print("started threads")
 
 #Just Here for testing, should not be run regularly
