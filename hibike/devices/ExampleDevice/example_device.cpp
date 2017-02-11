@@ -38,7 +38,7 @@ void loop() {
 // Updates param to new value passed in data.
 //    param   -   Parameter index
 //    data    -   buffer to get the value from, in little-endian bytes
-//    len     -   number of bytes in data
+//    len     -   size of the buffer for overflow checking
 //
 //   return   -   number of bytes read from data on success; otherwise return 0
 
@@ -98,7 +98,7 @@ uint32_t device_write(uint8_t param, uint8_t* data, size_t len) {
 // Modifies data to contain the parameter value.
 //    param   -   Parameter index
 //    data    -   buffer to return data in, little-endian
-//    len     -   Maximum length of the buffer
+//    len     -   size of the buffer for overflow checking
 //
 //    return  -   number of bytes writted to data on success; 0 otherwise
 

@@ -58,8 +58,6 @@ void hibike_loop() {
               }
           }
 
-          // params = hibikeBuff.payload[0] - 1;
-          // value = *((uint32_t*) &hibikeBuff.payload[DEVICE_PARAM_BYTES]);
           //write values
           *((uint16_t*)&hibikeBuff.payload[0]) = params;
           send_data_update(*((uint16_t*) &hibikeBuff.payload[0]));
