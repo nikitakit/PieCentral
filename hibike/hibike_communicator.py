@@ -5,39 +5,67 @@
 import hibike_message as hm
 import hibike_process as hp
 import multiprocessing
-
+import threading
 
 class HibikeCommunicator:
-   def _init_():
-       """ 
+  
+   def __init__(self):
+      """
           Set up the pipes for communication between the device and the Beegle Bum Black, creates a thread to recieve communications from the device, and starts up the process that runs the communication
-       """
-       
-       # This block creates the pipes
-       self.pipeToChild, pipeFromChild = multiprocessing.Pipe()
-       
-       # This block creates the process
-       badThingsQueue = multiprocessing.Queue()
-       self.stateQueue = multiprocessing.Queue()
-       newProcess = multiprocessing.Process(target=hp.hibike_process, name="hibike_sim", args=[badThingsQueue,self.stateQueue, pipeFromChild])
-       newProcess.daemon = True
-       newProcess.start()
-       self.pipeToChild.send(["enumerate_all", []])
+      """
+      
+      # This block creates the pipes
+      self.pipeToChild, pipeFromChild = multiprocessing.Pipe()
+      
+      # This block creates the process
+      badThingsQueue = multiprocessing.Queue()
+      self.stateQueue = multiprocessing.Queue()
+      newProcess = multiprocessing.Process(target=hp.hibike_process, name="hibike_sim", args=[badThingsQueue,self.stateQueue, pipeFromChild])
+      newProcess.daemon = True
+      newProcess.start()
+      self.pipeToChild.send(["enumerate_all", []])
+      
+      # Creates the list of uids
+      self.uids = set()
+      
+      # This block creates the thread
+      threading.Thread(target = self.process_output)
 
-       # This block creates the thread
-       threading.Thread(target = print_output)
-   
-   def print_ouput():
-   """
-      Prints out messages from the devices that are uploaded by newProcess to stateQueue
-   """
-      try:
-         output = self.stateQueue.get_nowait()
-      except QueueEmpty:
-         continue
-      print(output)
+   def process_output(self):
+      """
+         Prints out messages from the devices that are uploaded by newProcess to stateQueue
+         If it's a subscription response from a device whose uid is not in self.uids, the uid will be added to self.uids
+         If it's a device disconnection from a device whose uid in self.uids, the uid will be removed from self.uids
+      """
+      while True:
+         try:
+            output = self.stateQueue.get_nowait()
+         except QueueEmpty:
+            continue
+         print(output)
+      
+         #Now, get or remove the uid if it is appropriate to do so
+         command, agrs = output
+         if command == "device_subscribed":
+            uid = args[0]
+            if uid not in self.uids:
+               self.uids.add(uid)
+         if command == "device_disconnected":
+            uid = args
+            if uid in self.uids:
+               self.uids.remove(uid)
 
-   def write(uid, params_and_values):
+   def get_uids_and_types(self):
+      """
+         Returns a list of tuples of all of the uids of all devices that the HibikeCommunicator talks to
+         Tuple structure: (uid, device type name)
+      """
+      list = []
+      for uid in self.uids:
+         list.add(uid, hm.uid_to_device_name(uid))
+      return list
+
+   def write(self, uid, params_and_values):
        """
           Sends a Device Write to a device
 
@@ -46,7 +74,7 @@ class HibikeCommunicator:
        """
        self.pipeToChild.send(["write_params", [uid, params_and_values]])
    
-    def read(uid, params): 
+   def read(self, uid, params): 
         """
            Sends a Device Read to a device
         
@@ -55,7 +83,7 @@ class HibikeCommunicator:
         """
         self.pipeToChild.send(["read_params", [uid, params]])
         
-    def subscribe(uid, delay, params):
+   def subscribe(self, uid, delay, params):
         """
            Subscribes to the device
            
