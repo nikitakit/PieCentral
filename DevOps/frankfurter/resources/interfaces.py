@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 interfaces -- Create and copy a custom network interface
 """

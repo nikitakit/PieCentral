@@ -35,7 +35,7 @@ sudo apt autoremove -y
 # Install Python packages
 sudo pip3 install -U pyserial pyyaml python-memcached flask flask-socketio eventlet pyusb protobuf
 
-# Install wireless dongle drivers
+# Install wireless dongle driver
 cd $HOME
 git clone https://github.com/xtknight/mt7610u-linksys-ae6000-wifi-fixes.git drivers
 cd drivers
