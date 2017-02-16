@@ -1,4 +1,5 @@
 dist: trusty
+sudo: required
 language: node_js
 node_js:
 - "6"
@@ -20,27 +21,20 @@ script:
 - node release.js --platform=darwin --arch=x64
 - node release.js --platform=linux --arch=x64
 - ls ..
-# - ls *
 branches:
   only:
   - master
   - nikita/test
 # before_deploy:
-# - sudo dpkg --add-architecture i386
-# - sudo apt-get update
-# - sudo apt-get install -y wine
-# - npm run-script build
-# - node release.js
-# deploy:
-#   provider: releases
-#   api_key:
-#     secure: n8qRthwWcGG2QqPR0r6a/50XEktDYYYKRT5X8Xr1tUYKBRoSYVYUCmGYdtUg4R0fDa5DzaDIKT0jiu4XB5S0TAUhyZNTogNcCE8sSRSWWBL3pBW6X+xa2OQfH1mABLHoqH8TGIAQ/PPRtOR8RYrpVE5vttPMIVoH/+FUyq+LAUbEbJ110qCAXie6xAHmfk6VqG4bINeDC//Kv9jnwKqR9OqSA6hn+DasevxpQENBWC6xTsLfX5f0Qy5SpOD6NalZ40QPZh1GMHWoZFoebzjCIzOcyBhDCcvta/L6PliMK6JfKINWbUPsH1knbh4S51y1UnUUXiZxc58RvjLW2THOZdYq96J3fJc7v+IY7w07AttcDIy2N1vi7H9gnlRgLpVJ5JB0pUjgpOSi1pxWOPo/hgK0MUOYPi4SVK095oPVQszMXDB3fGmB7Bo2j1uyACBad7C/8HN2m7lBjKw+82Y6k7x8bNZc0cX8J2jp6YSCtzI2LELyHxahVg8OxjAp14zBDdAJ4XsABrzeuVmPO0Xyc+OkqgYCUpF2+rJFNzgPGylBMmZix9xy+DEq0EU2benx6XbtkZ9AqX7YfQ69hhV0RVrAdpLGDv/wZYAdXvsGTOsO9EkGBv9Drn30cOolah1uHetPYAbLYpDeMeoqZQLZJP78jAXXk/wnehQlijmehEg=
-#   file: TODO
-#   on:
-#     branch: nikita/test
-# env:
-#   global:
-#     # prevent wine popup dialogs about installing additional packages
-#     - WINEDLLOVERRIDES="mscoree,mshtml="
-#     - WINEDEBUG="-all"
-sudo: required
+# - ...
+deploy:
+  provider: releases
+  api_key:
+    secure: n8qRthwWcGG2QqPR0r6a/50XEktDYYYKRT5X8Xr1tUYKBRoSYVYUCmGYdtUg4R0fDa5DzaDIKT0jiu4XB5S0TAUhyZNTogNcCE8sSRSWWBL3pBW6X+xa2OQfH1mABLHoqH8TGIAQ/PPRtOR8RYrpVE5vttPMIVoH/+FUyq+LAUbEbJ110qCAXie6xAHmfk6VqG4bINeDC//Kv9jnwKqR9OqSA6hn+DasevxpQENBWC6xTsLfX5f0Qy5SpOD6NalZ40QPZh1GMHWoZFoebzjCIzOcyBhDCcvta/L6PliMK6JfKINWbUPsH1knbh4S51y1UnUUXiZxc58RvjLW2THOZdYq96J3fJc7v+IY7w07AttcDIy2N1vi7H9gnlRgLpVJ5JB0pUjgpOSi1pxWOPo/hgK0MUOYPi4SVK095oPVQszMXDB3fGmB7Bo2j1uyACBad7C/8HN2m7lBjKw+82Y6k7x8bNZc0cX8J2jp6YSCtzI2LELyHxahVg8OxjAp14zBDdAJ4XsABrzeuVmPO0Xyc+OkqgYCUpF2+rJFNzgPGylBMmZix9xy+DEq0EU2benx6XbtkZ9AqX7YfQ69hhV0RVrAdpLGDv/wZYAdXvsGTOsO9EkGBv9Drn30cOolah1uHetPYAbLYpDeMeoqZQLZJP78jAXXk/wnehQlijmehEg=
+  file:
+  - dawn-win32-ia64.zip
+  - dawn-darwin-x64.zip
+  - dawn-linux-x64.zip
+  skip_cleanup: true
+  on:
+    tags: true
