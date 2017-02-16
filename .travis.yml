@@ -1,5 +1,5 @@
 dist: trusty
-sudo: required
+# sudo: required
 language: node_js
 node_js:
 - "6"
@@ -7,25 +7,32 @@ os:
 - linux
 install:
 - mkdir -p artifacts
-- pushd dawn
+# - pushd dawn
 - make dawn-install
 - popd
 script:
 - pushd dawn
-- make dawn-test
-- make dawn-lint
-- if git tag -l --points-at HEAD | grep dawn; then
+# - make dawn-test
+# - make dawn-lint
+# - if git tag -l --points-at HEAD | grep dawn; then
+#       export DEPLOY_ARTIFACTS=1;
+#       npm install electron-packager;
+#       sudo dpkg --add-architecture i386;
+#       sudo apt-get update;
+#       sudo apt-get install -y wine;
+#       sudo apt-get install -y p7zip-full;
+#       npm run-script build;
+#       node release.js --platform=win32 --arch=ia32;
+#       node release.js --platform=darwin --arch=x64;
+#       node release.js --platform=linux --arch=x64;
+#       cp ../*.zip ../artifacts;
+#   fi
+- popd
+- pushd DevOps/frankfurter/scripts/update
+- if git tag -l --points-at HEAD | grep runtime; then
       export DEPLOY_ARTIFACTS=1;
-      npm install electron-packager;
-      sudo dpkg --add-architecture i386;
-      sudo apt-get update;
-      sudo apt-get install -y wine;
-      sudo apt-get install -y p7zip-full;
-      npm run-script build;
-      node release.js --platform=win32 --arch=ia32;
-      node release.js --platform=darwin --arch=x64;
-      node release.js --platform=linux --arch=x64;
-      cp ../*.zip ../artifacts;
+      ./create_update.sh;
+      cp ../../build/*.tar.gz ../../../../artifacts;
   fi
 - popd
 branches:
@@ -33,6 +40,7 @@ branches:
   - master
   - nikita/test
   - /^(dawn)\/.*$/
+  - /^(runtime)\/.*$/
   - /^(test)\/.*$/
 deploy:
   provider: releases
