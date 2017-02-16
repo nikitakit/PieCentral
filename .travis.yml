@@ -11,6 +11,9 @@ script:
 - make dawn-test
 - make dawn-lint
 - npm install electron-packager
+- sudo dpkg --add-architecture i386
+- sudo apt-get update
+- sudo apt-get install -y wine
 - npm run-script build
 - node release.js
 - ls *
@@ -18,13 +21,12 @@ branches:
   only:
   - master
   - nikita/test
-before_deploy:
-- sudo dpkg --add-architecture i386
-- sudo apt-get update
-- sudo apt-get install -y wine
-- npm install -g electron-packager
-- npm run-script build
-- node release.js
+# before_deploy:
+# - sudo dpkg --add-architecture i386
+# - sudo apt-get update
+# - sudo apt-get install -y wine
+# - npm run-script build
+# - node release.js
 # deploy:
 #   provider: releases
 #   api_key:
