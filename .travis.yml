@@ -14,9 +14,13 @@ script:
 - sudo dpkg --add-architecture i386
 - sudo apt-get update
 - sudo apt-get install -y wine
-- npm run-script build
+- sudo apt-get install -y p7zip-full
+- npm run-script build --platform=win32 --arch=ia32
+- npm run-script build --platform=darwin --arch=x64
+- npm run-script build --platform=linux --arch=x64
 - node release.js
-- ls *
+- ls ..
+# - ls *
 branches:
   only:
   - master
