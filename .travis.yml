@@ -15,10 +15,10 @@ script:
 - sudo apt-get update
 - sudo apt-get install -y wine
 - sudo apt-get install -y p7zip-full
-- npm run-script build --platform=win32 --arch=ia32
-- npm run-script build --platform=darwin --arch=x64
-- npm run-script build --platform=linux --arch=x64
-- node release.js
+- npm run-script build
+- node release.js --platform=win32 --arch=ia32
+- node release.js --platform=darwin --arch=x64
+- node release.js --platform=linux --arch=x64
 - ls ..
 # - ls *
 branches:
