@@ -7,8 +7,8 @@ os:
 - linux
 install:
 - mkdir -p artifacts
-# - pushd dawn
-- make dawn-install
+- pushd dawn
+# - make dawn-install
 - popd
 script:
 - pushd dawn
