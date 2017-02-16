@@ -1,5 +1,5 @@
 dist: trusty
-# sudo: required
+sudo: required
 language: node_js
 node_js:
 - "6"
@@ -8,28 +8,26 @@ os:
 install:
 - mkdir -p artifacts
 - pushd dawn
-# - make dawn-install
+- make dawn-install
 - popd
 script:
 - pushd dawn
+- make dawn-test
+- make dawn-lint
 - if git tag -l --points-at HEAD | grep dawn; then
       export DEPLOY_ARTIFACTS=1;
-      cp Makefile ../artifacts;
-      cp package.json ../artifacts;
+      npm install electron-packager;
+      sudo dpkg --add-architecture i386;
+      sudo apt-get update;
+      sudo apt-get install -y wine;
+      sudo apt-get install -y p7zip-full;
+      npm run-script build;
+      node release.js --platform=win32 --arch=ia32;
+      node release.js --platform=darwin --arch=x64;
+      node release.js --platform=linux --arch=x64;
+      cp ../*.zip ../artifacts;
   fi
 - popd
-# - make dawn-test
-# - make dawn-lint
-# - npm install electron-packager
-# - sudo dpkg --add-architecture i386
-# - sudo apt-get update
-# - sudo apt-get install -y wine
-# - sudo apt-get install -y p7zip-full
-# - npm run-script build
-# - node release.js --platform=win32 --arch=ia32
-# - node release.js --platform=darwin --arch=x64
-# - node release.js --platform=linux --arch=x64
-# - ls ..
 branches:
   only:
   - master
