@@ -13,9 +13,9 @@ install:
 script:
 - pushd dawn
 - if git tag -l --points-at HEAD | grep dawn; then
-      export DEPLOY_ARTIFACTS=1
-      cp Makefile ../artifacts
-      cp package.json ../artifacts
+      export DEPLOY_ARTIFACTS=1;
+      cp Makefile ../artifacts;
+      cp package.json ../artifacts;
   fi
 - popd
 # - make dawn-test
