@@ -14,7 +14,6 @@ script:
 - npm run-script build
 - node release.js
 - ls *
-- ls */*
 branches:
   only:
   - master
@@ -30,3 +29,12 @@ before_deploy:
 #   file: TODO
 #   on:
 #     branch: nikita/test
+# env:
+#   global:
+#     # prevent wine popup dialogs about installing additional packages
+#     - WINEDLLOVERRIDES="mscoree,mshtml="
+#     - WINEDEBUG="-all"
+addons:
+  apt:
+    packages:
+    - wine
