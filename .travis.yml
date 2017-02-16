@@ -10,6 +10,11 @@ install:
 script:
 - make dawn-test
 - make dawn-lint
+- npm install -g electron-packager
+- npm run-script build
+- node release.js
+- ls *
+- ls */*
 branches:
   only:
   - master
