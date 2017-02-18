@@ -5,47 +5,33 @@ node_js:
 - "6"
 os:
 - linux
-install:
+env:
+  - TEST_DIR=dawn
+  - TEST_DIR=runtime
+before_install:
 - mkdir -p artifacts
-- pushd dawn
-- make dawn-install
+- if [[ $TEST_DIR = dawn ]] && git tag -l --points-at HEAD | grep dawn; then
+    export DEPLOY_ARTIFACTS=1;
+  fi
+- if [[ $TEST_DIR = runtime ]] && git tag -l --points-at HEAD | grep runtime; then
+    export DEPLOY_ARTIFACTS=1;
+  fi
+- mkdir -p build-deps
+- export PATH="$PATH:$PWD/build-deps/bin"
+install:
+- pushd $TEST_DIR
+- make install
+- if [[ $DEPLOY_ARTIFACTS = 1 ]]; then
+    make artifacts-install;
+  fi
 - popd
 script:
-- pushd dawn
-- make dawn-test
-- make dawn-lint
-- if git tag -l --points-at HEAD | grep dawn; then
-      export DEPLOY_ARTIFACTS=1;
-      npm install electron-packager;
-      sudo dpkg --add-architecture i386;
-      sudo apt-get update;
-      sudo apt-get install -y wine;
-      sudo apt-get install -y p7zip-full;
-      npm run-script build;
-      node release.js --platform=win32 --arch=ia32;
-      node release.js --platform=darwin --arch=x64;
-      node release.js --platform=linux --arch=x64;
-      cp ../*.zip ../artifacts;
+- pushd $TEST_DIR
+- make test
+- make lint
+- if [[ $DEPLOY_ARTIFACTS = 1 ]]; then
+    make artifacts;
   fi
-- popd
-- mkdir -p build
-- pushd build
-- wget https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip
-- unzip protoc-3.2.0-linux-x86_64.zip
-- export PATH="$PATH:$PWD/bin"
-- popd
-- pushd DevOps/frankfurter/scripts/update
-- ./create_update.sh;
-- if git tag -l --points-at HEAD | grep runtime; then
-      export DEPLOY_ARTIFACTS=1;
-      cp ../../build/*.tar.gz ../../../../artifacts;
-  fi
-- popd
-- protoc -I=ansible-protos --python_out=runtime/testy ansible-protos/*.proto
-- ls runtime/testy
-- pushd runtime/testy
-- pip3 install protobuf
-- python3 runtime.py --test
 - popd
 branches:
   only:
