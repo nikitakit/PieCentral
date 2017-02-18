@@ -14,6 +14,7 @@ test:
 	protoc -I=../ansible-protos --python_out=testy ../ansible-protos/*.proto
 	# cd testy && python3 runtime.py --test
 	# XXX: don't merge if this is still disabled
+	# ...
 
 artifacts:
 	cp ../DevOps/frankfurter/build/*.tar.gz ../artifacts
